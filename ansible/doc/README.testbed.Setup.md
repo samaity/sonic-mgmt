@@ -42,6 +42,7 @@ PTF docker is used to send and receive packets to test data plane.
 - Build PTF docker
 ```
 git clone --recursive https://github.com/Azure/sonic-buildimage.git
+make configure PLATFORM=generic
 make target/docker-ptf.gz
 ```
 
@@ -56,6 +57,7 @@ the docker and run ansible playbook inside the docker.
 - Build *sonic-mgmt* docker
 ```
 git clone --recursive https://github.com/Azure/sonic-buildimage.git
+make configure PLATFORM=generic
 make target/docker-sonic-mgmt.gz
 ```
 
@@ -100,6 +102,7 @@ Once you are in the docker, you need to modify the testbed configuration files t
 ```
 ./testbed-cli.sh start-vms server_1 password.txt
 ```
+  - please note: Here "password.txt" is the ansible vault password file name/path. Ansible allows user use ansible vault to encrypt password files. By default, this shell script require a password file. If you are not using ansible vault, just create an empty file and pass the filename to the command line. The file name and location is created and maintained by user. 
 
 Check that all VMs are up and running: ```ansible -m ping -i veos server_1```
 
