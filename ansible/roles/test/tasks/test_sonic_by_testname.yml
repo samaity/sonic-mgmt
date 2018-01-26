@@ -22,7 +22,7 @@
 
     - name: Set dscp_mode var for decap test for mellanox
       set_fact:
-          dhcp_mode: uniform
+          dscp_mode: uniform
       when:
         - sonic_hwsku in mellanox_hwskus
         - dscp_mode is not defined
@@ -32,6 +32,9 @@
 
 - name: run test case {{ testcases[testcase_name]['filename'] }} file
   include: "{{ testcases[testcase_name]['filename'] }}"
+
+- name: do basic sanity check after each test
+  include: base_sanity.yml
 
 - debug: msg="!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 - debug: msg="!!!!!!!!!!!!!!!!!!!! end running test {{ testcase_name }} !!!!!!!!!!!!!!!!!!!!"
