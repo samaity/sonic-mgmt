@@ -1,0 +1,101 @@
+# This is the helper playbook for ecmp.yml. It does the following in order. 
+# 1. Gets the interface through which traffic is flowing to the destination
+# 2. Appends this interface to an array for future reference (specifically for bringing the interface back up later)
+# 3. Clears the counter on the DUT
+# 4. Starts traffic using 'ping' command
+# 5. Captures the transmitted and received bytes from 'ping' output
+# 6. Shuts down the interface through which traffic is flowing
+# 7. Verifies that the interface is shutdown correctly by checking its status
+# 8. Verifies that this interface is removed from the prefix after shutting down
+# 9. Calculates the convergence time for this interface
+
+- block:
+    - name: Get the interface through which traffic is flowing
+      get_interface:
+
+    - debug: msg="iface {{ iface }}"
+
+    - set_fact:
+        interface: "{{ iface }}"
+
+    - debug: msg={{interface}}
+
+    - name: Append interface to the list
+      set_fact:
+        iface_list: "{{iface_list}} + [ '{{interface }}' ]"
+
+    - debug: var=iface_list
+
+    - set_fact:
+        peer_device: "{{neighbors[interface]['peerdevice']}}"
+        neighbor_interface: "{{neighbors[interface]['peerport']}}"
+
+    - conn_graph_facts: host={{ peer_device }}
+      connection: local
+
+    - set_fact:
+        peer_host: "{{device_info['mgmtip']}}"
+        peer_hwsku: "{{device_info['HwSku']}}"
+
+    - set_fact:
+        intfs_to_exclude: "{{interface}}"
+
+    - name: Clear the counter on the DUT.
+      shell: portstat -c
+      delegate_to: "{{ ansible_host }}"
+      register: counter_result
+      failed_when: counter_result.rc != 0
+
+    - set_fact:
+        total_packets: 30000
+        packets_per_sec: 250
+
+    - name: Ping destination VM from host VM.
+      shell: ping -n -i 0.004 100.1.1.1 -c 30000 | grep "received" | cut -d"," -f2 | xargs | cut -d" " -f1
+      delegate_to: 172.25.11.207
+      register: ping_result
+      failed_when: ping_result.rc != 0
+
+    - set_fact:
+        received: "{{ ping_result.stdout | int }}"
+
+    - debug: msg="received {{received}}"
+
+    - pause:
+        seconds: 10
+
+    - name: Shut down neighbor interface {{neighbor_interface}} on {{peer_host}}
+      action: apswitch template=neighbor_interface_shut_single.j2
+      args:
+        host: "{{peer_host}}"
+        login: "{{switch_login[hwsku_map[peer_hwsku]]}}"
+      connection: switch
+
+    - pause:
+        seconds: 20
+
+    - interface_facts: up_ports={{minigraph_ports | difference(intfs_to_exclude)}}
+
+    - debug: msg="Found link down ports {{ansible_interface_link_down_ports}} "
+      when: ansible_interface_link_down_ports | length > 0
+
+    - name: Verify interfaces are up correctly
+      assert: { that: "{{ ansible_interface_link_down_ports | length }} == 0" }
+
+    - name: Verify {{intfs_to_exclude}} is down correctly
+      assert: { that: "'{{ ansible_interface_facts[intfs_to_exclude]['active'] }}' == 'False'" }
+
+    - name: Gather facts from ip route
+      ip_route:
+
+    - debug: msg="ethernet_list {{ ethernet_list }}"
+
+    - set_fact:
+        interfaces: "{{ ethernet_list }}"
+
+    - debug: msg="Verify that {{ interface }} is removed from the prefix"
+
+    - fail: msg="{{ interface }} found in the prefix"
+      when: intfs_to_exclude in interfaces
+
+    - debug: msg="convtime {{ (total_packets|int - received|int)*1000 / packets_per_sec|int }} ms"

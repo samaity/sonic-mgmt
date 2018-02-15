@@ -1,0 +1,50 @@
+# This is ecmp test. In this test, all DUT's neighbor interfaces are
+# shutdown. After each shutdown, the DUT's interface is verified to see if it
+# is updated to the correct up/down state. In addition, a prefix is verified
+# for the removed/added ECMP path. Convergence time is calculated after shurring
+# down each interface.
+
+- name: Gathering lab graph facts about the device
+  conn_graph_facts: host={{ inventory_hostname }}
+  connection: local
+  tags: always
+
+- set_fact:
+    neighbors: "{{device_conn}}"
+
+- name: Initialize an empty list to store interface names
+  set_fact:
+     iface_list: []
+
+- include: ecmp/link_down.yml
+  with_sequence: count=15
+
+- name: Gathering lab graph facts about the device
+  conn_graph_facts: host={{ inventory_hostname }}
+  connection: local
+  tags: always
+
+- set_fact:
+    neighbors: "{{device_conn}}"
+
+- debug: msg="iface_list {{ iface_list }}"
+
+- include: ecmp/link_up.yml
+  with_items: iface_list
+
+- name: Verify that all interfaces are up
+  assert: { that: "{{ ansible_interface_link_down_ports }}|length == 0" }
+
+- pause:
+    seconds: 60
+
+- name: Gathering lab graph facts about the device
+  conn_graph_facts: host={{ inventory_hostname }}
+  connection: local
+  tags: always
+
+- set_fact:
+    neighbors: "{{device_conn}}"
+
+- include: ecmp/paths_up.yml
+  with_items: iface_list
