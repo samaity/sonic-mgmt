@@ -117,7 +117,7 @@ class DefineOid(object):
         self.sysContact  = dp + "1.3.6.1.2.1.1.4.0"
         self.sysName     = dp + "1.3.6.1.2.1.1.5.0"
         self.sysLocation = dp + "1.3.6.1.2.1.1.6.0"
-        
+
         # From IF-MIB
         self.ifIndex       = dp + "1.3.6.1.2.1.2.2.1.1"
         self.ifDescr       = dp + "1.3.6.1.2.1.2.2.1.2"
@@ -140,13 +140,22 @@ class DefineOid(object):
         self.ipAdEntAddr    = dp + "1.3.6.1.2.1.4.20.1.1"
         self.ipAdEntIfIndex = dp + "1.3.6.1.2.1.4.20.1.2"
         self.ipAdEntNetMask = dp + "1.3.6.1.2.1.4.20.1.3"
-	
+
         # From Dell Private MIB
         self.ChStackUnitCpuUtil5sec = dp + "1.3.6.1.4.1.6027.3.10.1.2.9.1.2.1"
 
+        # From Cisco private MIB (PFC and queue counters)
+        self.cpfcIfRequests         = dp + "1.3.6.1.4.1.9.9.813.1.1.1.1" # + .ifindex
+        self.cpfcIfIndications      = dp + "1.3.6.1.4.1.9.9.813.1.1.1.2" # + .ifindex
+        self.requestsPerPriority    = dp + "1.3.6.1.4.1.9.9.813.1.2.1.2" # + .ifindex.prio
+        self.indicationsPerPriority = dp + "1.3.6.1.4.1.9.9.813.1.2.1.3" # + .ifindex.prio
+        self.csqIfQosGroupStats     = dp + "1.3.6.1.4.1.9.9.580.1.5.5.1.4" # + .ifindex.IfDirection.QueueID
+
+        # From Cisco private MIB (PSU)
+        self.cefcFRUPowerOperStatus = dp + "1.3.6.1.4.1.9.9.117.1.1.2.1.2" # + .psuindex
 
 def decode_hex(hexstring):
- 
+
     if len(hexstring) < 3:
         return hexstring
     if hexstring[:2] == "0x":
@@ -201,7 +210,7 @@ def decode_type(module, current_oid, val):
          rfc1902.TimeTicks.tagSet: long,
          rfc1902.Counter64.tagSet: long
          }
-    
+
     if val is None or not val:
         module.fail_json(msg="Unable to convert ASN1 type to python type. No value was returned for OID %s" % current_oid)
 
@@ -241,7 +250,7 @@ def main():
     if m_args['version'] == "v2" or m_args['version'] == "v2c":
         if m_args['community'] == False:
             module.fail_json(msg='Community not set when using snmp version 2')
-            
+
     if m_args['version'] == "v3":
         if m_args['username'] == None:
             module.fail_json(msg='Username not set when using snmp version 3')
@@ -249,7 +258,7 @@ def main():
         if m_args['level'] == "authPriv" and m_args['privacy'] == None:
             module.fail_json(msg='Privacy algorithm not set when using authPriv')
 
-            
+
         if m_args['integrity'] == "sha":
             integrity_proto = cmdgen.usmHMACSHAAuthProtocol
         elif m_args['integrity'] == "md5":
@@ -259,7 +268,7 @@ def main():
             privacy_proto = cmdgen.usmAesCfb128Protocol
         elif m_args['privacy'] == "des":
             privacy_proto = cmdgen.usmDESPrivProtocol
-    
+
     # Use SNMP Version 2
     if m_args['version'] == "v2" or m_args['version'] == "v2c":
         snmp_auth = cmdgen.CommunityData(m_args['community'])
@@ -278,29 +287,43 @@ def main():
     v = DefineOid(dotprefix=False)
 
     Tree = lambda: defaultdict(Tree)
-                               
+
     results = Tree()
-            
+
+    # Getting system description could take more than 1 second on some Dell platform
+    # (e.g. S6000) when cpu utilization is high, increse timeout to tolerate the delay.
     errorIndication, errorStatus, errorIndex, varBinds = cmdGen.getCmd(
         snmp_auth,
-        cmdgen.UdpTransportTarget((m_args['host'], 161)),
+        cmdgen.UdpTransportTarget((m_args['host'], 161), timeout=5.0),
         cmdgen.MibVariable(p.sysDescr,),
-        cmdgen.MibVariable(p.sysObjectId,), 
-        cmdgen.MibVariable(p.sysUpTime,),
-        cmdgen.MibVariable(p.sysContact,), 
-        cmdgen.MibVariable(p.sysName,),
-        cmdgen.MibVariable(p.sysLocation,),
     )
 
     if errorIndication:
-        module.fail_json(msg=str(errorIndication))
+        module.fail_json(msg=str(errorIndication) + ' querying system description.')
 
     for oid, val in varBinds:
         current_oid = oid.prettyPrint()
         current_val = val.prettyPrint()
         if current_oid == v.sysDescr:
             results['ansible_sysdescr'] = decode_hex(current_val)
-        elif current_oid == v.sysObjectId:
+
+    errorIndication, errorStatus, errorIndex, varBinds = cmdGen.getCmd(
+        snmp_auth,
+        cmdgen.UdpTransportTarget((m_args['host'], 161)),
+        cmdgen.MibVariable(p.sysObjectId,),
+        cmdgen.MibVariable(p.sysUpTime,),
+        cmdgen.MibVariable(p.sysContact,),
+        cmdgen.MibVariable(p.sysName,),
+        cmdgen.MibVariable(p.sysLocation,),
+    )
+
+    if errorIndication:
+        module.fail_json(msg=str(errorIndication) + ' querying system infomation.')
+
+    for oid, val in varBinds:
+        current_oid = oid.prettyPrint()
+        current_val = val.prettyPrint()
+        if current_oid == v.sysObjectId:
             results['ansible_sysobjectid'] = current_val
         elif current_oid == v.sysUpTime:
             results['ansible_sysuptime'] = current_val
@@ -321,18 +344,18 @@ def main():
         cmdgen.MibVariable(p.ifPhysAddress,),
         cmdgen.MibVariable(p.ifAdminStatus,),
         cmdgen.MibVariable(p.ifOperStatus,),
-        cmdgen.MibVariable(p.ipAdEntAddr,), 
-        cmdgen.MibVariable(p.ipAdEntIfIndex,), 
-        cmdgen.MibVariable(p.ipAdEntNetMask,), 
+        cmdgen.MibVariable(p.ipAdEntAddr,),
+        cmdgen.MibVariable(p.ipAdEntIfIndex,),
+        cmdgen.MibVariable(p.ipAdEntNetMask,),
         cmdgen.MibVariable(p.ifAlias,),
     )
 
     if errorIndication:
-        module.fail_json(msg=str(errorIndication))
+        module.fail_json(msg=str(errorIndication) + ' querying interface details')
 
     interface_indexes = []
-    
-    all_ipv4_addresses = []     
+
+    all_ipv4_addresses = []
     ipv4_networks = Tree()
 
     for varBinds in varTable:
@@ -392,7 +415,7 @@ def main():
     )
 
     if errorIndication:
-        module.fail_json(msg=str(errorIndication))
+        module.fail_json(msg=str(errorIndication) + ' querying interface counters')
 
     for varBinds in varTable:
         for oid, val in varBinds:
@@ -449,7 +472,7 @@ def main():
         )
 
         if errorIndication:
-            module.fail_json(msg=str(errorIndication))
+            module.fail_json(msg=str(errorIndication) + ' querying CPU busy indeces')
 
         for oid, val in varBinds:
             current_oid = oid.prettyPrint()
@@ -457,10 +480,74 @@ def main():
             if current_oid == v.ChStackUnitCpuUtil5sec:
                 results['ansible_ChStackUnitCpuUtil5sec'] = decode_type(module, current_oid, val)
 
+    errorIndication, errorStatus, errorIndex, varTable = cmdGen.nextCmd(
+        snmp_auth,
+        cmdgen.UdpTransportTarget((m_args['host'], 161)),
+        cmdgen.MibVariable(p.cpfcIfRequests,),
+        cmdgen.MibVariable(p.cpfcIfIndications,),
+        cmdgen.MibVariable(p.requestsPerPriority,),
+        cmdgen.MibVariable(p.indicationsPerPriority,),
+    )
+
+    if errorIndication:
+        module.fail_json(msg=str(errorIndication) + ' querying PFC counters')
+
+    for varBinds in varTable:
+        for oid, val in varBinds:
+            current_oid = oid.prettyPrint()
+            current_val = val.prettyPrint()
+            if v.cpfcIfRequests in current_oid:
+                ifIndex = int(current_oid.rsplit('.', 1)[-1])
+                results['snmp_interfaces'][ifIndex]['cpfcIfRequests'] = current_val
+            if v.cpfcIfIndications in current_oid:
+                ifIndex = int(current_oid.rsplit('.', 1)[-1])
+                results['snmp_interfaces'][ifIndex]['cpfcIfIndications'] = current_val
+            if v.requestsPerPriority in current_oid:
+                ifIndex = int(current_oid.split('.')[-2])
+                prio = int(current_oid.split('.')[-1])
+                results['snmp_interfaces'][ifIndex]['requestsPerPriority'][prio] = current_val
+            if v.indicationsPerPriority in current_oid:
+                ifIndex = int(current_oid.split('.')[-2])
+                prio = int(current_oid.split('.')[-1])
+                results['snmp_interfaces'][ifIndex]['indicationsPerPriority'][prio] = current_val
+
+    errorIndication, errorStatus, errorIndex, varTable = cmdGen.nextCmd(
+        snmp_auth,
+        cmdgen.UdpTransportTarget((m_args['host'], 161)),
+        cmdgen.MibVariable(p.csqIfQosGroupStats,),
+    )
+
+    if errorIndication:
+        module.fail_json(msg=str(errorIndication) + ' querying QoS stats')
+
+    for varBinds in varTable:
+        for oid, val in varBinds:
+            current_oid = oid.prettyPrint()
+            current_val = val.prettyPrint()
+            if v.csqIfQosGroupStats in current_oid:
+                ifIndex = int(current_oid.split('.')[-4])
+                ifDirection = int(current_oid.split('.')[-3])
+                queueId = int(current_oid.split('.')[-2])
+                counterId = int(current_oid.split('.')[-1])
+                results['snmp_interfaces'][ifIndex]['queues'][ifDirection][queueId][counterId] = current_val
+
+    errorIndication, errorStatus, errorIndex, varTable = cmdGen.nextCmd(
+        snmp_auth,
+        cmdgen.UdpTransportTarget((m_args['host'], 161)),
+        cmdgen.MibVariable(p.cefcFRUPowerOperStatus,),
+    )
+
+    if errorIndication:
+        module.fail_json(msg=str(errorIndication) + ' querying FRU')
+
+    for varBinds in varTable:
+        for oid, val in varBinds:
+            current_oid = oid.prettyPrint()
+            current_val = val.prettyPrint()
+            if v.cefcFRUPowerOperStatus in current_oid:
+                psuIndex = int(current_oid.split('.')[-1])
+                results['snmp_psu'][psuIndex]['operstatus'] = current_val
+
     module.exit_json(ansible_facts=results)
-    
 
 main()
-
-
-

@@ -2,12 +2,11 @@
 - set_fact:
     out_dir: /tmp/
     testname: acl
+    run_dir: /tmp/
 
 # Gather minigraph facts
 - name: Gathering minigraph facts about the device
   minigraph_facts: host={{ inventory_hostname }}
-  become: no
-  connection: local
 
 - name: Read port reverse alias mapping
   set_fact:
@@ -50,12 +49,18 @@
             dest=/root
       delegate_to: "{{ ptf_host }}"
 
+    - name: copy ptftests
+      copy: src=roles/test/files/ptftests
+            dest=/root
+      delegate_to: "{{ ptf_host }}"
+
     - name: Run the test
       include: ptf_runner.yml
       vars:
           ptf_test_name: ACL Test
           ptf_test_dir: acstests
           ptf_test_path: acltb_test.AclTest
+          ptf_platform_dir: ptftests
           ptf_platform: remote
           ptf_test_params:
             - verbose=True
@@ -87,6 +92,7 @@
           ptf_test_name: ACL Test
           ptf_test_dir: acstests
           ptf_test_path: acltb_test.AclTest
+          ptf_platform_dir: ptftests
           ptf_platform: remote
           ptf_test_params:
             - verbose=True

@@ -1,7 +1,5 @@
 - name: Gathering minigraph facts about the device
   minigraph_facts: host={{ inventory_hostname }}
-  connection: local
-  become: no
   tags: always
 
 ### When calling the following tests, you need to provide a command line parameter
@@ -162,9 +160,13 @@
   include: acltb.yml
   tags: acl
 
-- name: PFC Watchdog test
-  include: pfc_wd.yml
-  tags: pfc_wd
+#- name: PFC Watchdog test
+#  include: pfc_wd.yml
+#tags: pfc_wd
+
+- name: ECN WRED configure test
+  include: ecn_wred.yml
+  tags: ecn_wred
 
 ### when calling this test, please add command line of testbed_type 
 ### -e testbed_type=t1
@@ -175,3 +177,7 @@
 - name: neighbor mac change test without using ptf
   include: neighbour-mac-noptf.yml
   tags: neighbour_mac_noptf
+
+- name: CRM test
+  include: crm.yml
+  tags: crm
