@@ -421,8 +421,20 @@ class VMTopology(object):
         if dut_iface not in ports:
             VMTopology.cmd('ovs-vsctl add-port %s %s' % (br_name, dut_iface))
 
-        bindings = VMTopology.get_ovs_port_bindings(br_name, dut_iface)
-        dut_iface_id = bindings[dut_iface]
+        # Vlan interface addition may take few secs to reflect in OVS Command,
+        # Let`s retry few times.
+        retries = 0
+        vlan_iface_id = None
+        while retries < RETRIES:
+            bindings = VMTopology.get_ovs_port_bindings(br_name)
+            vlan_iface_id = bindings[vlan_iface]
+            if vlan_iface_id is not None:
+                break
+            time.sleep(1)
+            retries += 1
+        if vlan_iface_id is None:
+            raise Exception("Can't find vlan_iface_id")
+
         injected_iface_id = bindings[injected_iface]
         vm_iface_id = bindings[vm_iface]
 
