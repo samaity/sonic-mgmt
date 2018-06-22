@@ -537,6 +537,16 @@ def parse_xml(filename, hostname):
     elif hwsku == "et6448m":
         for i in range(0, 52):
             port_alias_to_name_map["Ethernet%d" % i] = "Ethernet%d" % i
+    elif hwsku == "Seastone-DX010-50":
+        for i in range(0,128, 2):
+            port_alias_to_name_map["Eth%d/%d" % (i/4 + 1, (i%4)/2 + 1)] = "Ethernet%d" % i
+    elif hwsku == "Seastone-DX010-10-50":
+        # from port 0 - 95 are 10G
+        for i in range(0, 96):
+            port_alias_to_name_map["Eth%d/%d" % (i/4 + 1, i%4 + 1)] = "Ethernet%d" % i
+        # from port 96 - 126 are 50G
+        for i in range(96, 128, 2):
+            port_alias_to_name_map["Eth%d/%d" % (i/4 + 1, (i%4)/2+1)] = "Ethernet%d" % i
     else:
         for i in range(0, 128, 4):
             port_alias_to_name_map["Ethernet%d" % i] = "Ethernet%d" % i
