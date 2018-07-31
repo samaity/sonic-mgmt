@@ -20,6 +20,7 @@ function usage
   echo "To configure a VM on a server: $0 config-vm 'topo-name' 'vm-name' ~/.password"
   echo "To generate minigraph for DUT in a topology: $0 gen-mg 'topo-name' ~/.password"
   echo "To deploy minigraph to DUT in a topology: $0 deploy-mg 'topo-name' ~/.password"
+  echo "To run test case on DUT in a topology: $0 run_tests 'topo-name' 'inventory' 'test-suite-name"
   echo
   echo "You should define your topology in testbed.csv file"
   echo
@@ -151,7 +152,7 @@ function deploy_minigraph
 
   read_file $1
 
-  ansible-playbook -i "$2" config_sonic_basedon_testbed.yml --vault-password-file="$3" -l "$dut" -e testbed_name="$1" -e deploy=true -e save=true
+  ansible-playbook -i "$2" config_sonic_basedon_testbed.yml --vault-password-file="$3" -l "$dut" -e testbed_name="$1" -e deploy=true -e save=true -e update_config=true
 
   echo Done
 }
@@ -187,6 +188,17 @@ function connect_topo
   ansible-playbook fanout_connect.yml -i veos --limit "$server" --vault-password-file="$2" -e "dut=$dut"
 }
 
+function run_tests
+{
+  echo "Running Test Suite $3"
+
+  read_file $1
+
+  ANSIBLE_KEEP_REMOTE_FILES=1 ansible-playbook -i "$2" test_sonic.yml -e testbed_name="$1" -e testcase_name="$3" -e inventory_hostname="$dut"
+
+  echo Done
+}
+
 if [ $# -lt 3 ]
 then
  usage
@@ -216,6 +228,8 @@ case "$1" in
   deploy-mg)   deploy_minigraph $2 $3 $4
                ;;
   test-mg)     test_minigraph $2 $3 $4
+               ;;
+  run_tests)   run_tests $2 $3 $4
                ;;
   *)           usage
                ;;
