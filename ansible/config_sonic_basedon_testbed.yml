@@ -221,9 +221,19 @@
         provider: selfsigned
       become: true
 
+  - name: create frr.conf file in ansible minigraph folder
+    template: src=templates/frr.j2
+              dest=minigraph/frr.conf
+    connection: local
+
   - block:
       - name: saved original minigraph file in SONiC DUT(ignore errors when file doesnot exist)
         shell: mv /etc/sonic/minigraph.xml /etc/sonic/minigraph.xml.orig
+        become: true
+        ignore_errors: true
+
+      - name: saved original frr.conf file in SONiC DUT(ignore errors when file doesnot exist)
+        shell: mv /etc/sonic/frr/frr.conf /etc/sonic/frr/frr.conf.orig
         become: true
         ignore_errors: true
 
@@ -301,6 +311,9 @@
             name: /etc/sonic/snmp.yml
             regexp: '^snmp_rocommunity:'
             line: 'snmp_rocommunity: {{ snmp_rocommunity }}'
+      - name: create frr.conf file in ansible minigraph folder
+        template: src=templates/frr.j2
+                  dest=/etc/sonic/frr/frr.conf
         become: true
 
       - name: disable automatic minigraph update if we are deploying new minigraph into SONiC
@@ -337,8 +350,32 @@
         shell: bash "/etc/sonic/apply_clet.sh"
         when: stat_result.stat.exists is defined and stat_result.stat.exists
 
-      - name: execute cli "config save -y" to save current minigraph as startup-config
-        become: true
-        shell: config save -y
+      - block:
+          - name: execute cli "config save -y" to save current minigraph as startup-config
+            become: true
+            shell: config save -y
+
+          - block:
+              - name: remove fec config from config_db.json
+                lineinfile:
+                    name: /etc/sonic/config_db.json
+                    regexp: '"fec": "rs"'
+                    state: absent
+                become: true
+
+              - name: modify port speed config in config_db.json
+                replace:
+                    dest: /etc/sonic/config_db.json
+                    regexp:  '"speed": ".*"'
+                    replace: '"speed": "{{ iface_speed }}"'
+                become: true
+
+              - name: execute cli "config reload -y" to apply modified config_db.json
+                become: true
+                shell: config load_minigraph -y
+
+            when: update_config is defined and update_config|bool == true
+
         when: save is defined and save|bool == true
+
     when: deploy is defined and deploy|bool == true

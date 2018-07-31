@@ -49,6 +49,7 @@ function usage
   echo "        -e enable_data_plane_acl=true"
   echo "        -e enable_data_plane_acl=false"
   echo "        by default, data acl is enabled"
+  echo "To run test case on DUT in a topology: $0 run_tests 'topo-name' 'inventory' 'test-suite-name"
   echo
   echo "You should define your topology in testbed CSV file"
   echo
@@ -235,7 +236,7 @@ function deploy_minigraph
 
   read_file $topology
 
-  ansible-playbook -i "$inventory" config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$duts" -e testbed_name="$topology" -e testbed_file=$tbfile -e vm_file=$vmfile -e deploy=true -e save=true $@
+  ansible-playbook -i "$inventory" config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$duts" -e testbed_name="$topology" -e testbed_file=$tbfile -e vm_file=$vmfile -e deploy=true -e save=true -e update_config=true $@
 
   echo Done
 }
@@ -303,6 +304,16 @@ while getopts "t:m:k:n:" OPTION; do
 done
 
 shift $((OPTIND-1))
+function run_tests
+{
+  echo "Running Test Suite $3"
+
+  read_file $1
+
+  ANSIBLE_KEEP_REMOTE_FILES=1 ansible-playbook -i "$2" test_sonic.yml -e testbed_name="$1" -e testcase_name="$3" -e inventory_hostname="$dut"
+
+  echo Done
+}
 
 if [ $# -lt 3 ]
 then
@@ -337,6 +348,8 @@ case "${subcmd}" in
   deploy-mg)   deploy_minigraph $@
                ;;
   test-mg)     test_minigraph $@
+               ;;
+  run_tests)   run_tests $2 $3 $4
                ;;
   *)           usage
                ;;
