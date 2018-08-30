@@ -102,6 +102,7 @@
 
     - name: Save the applied ACL in ConfigDB
       command: config save -y
+      become: true
 
     - name: Reboot the switch
       include: common_tasks/reboot_sonic.yml
@@ -120,6 +121,10 @@
             - testbed_type=\"{{ testbed_type }}\"
 
   always:
+    # Copy ACL del config to the switch if it does not exist
+    - name: Copy ACL config file to the DUT if it does not exist
+      copy: src="roles/test/tasks/acl/acltb_test_rules-del.json" dest="/tmp/" force=no
+
     - name: Clean up ACL rules.
       vars:
         command_to_run: "acl-loader update full /tmp/acltb_test_rules-del.json"
@@ -128,3 +133,4 @@
 
     - name: Ensure ConfigDB is cleaned up
       command: config save -y
+      become: true
