@@ -136,10 +136,13 @@ class BgpModule(object):
                         if regex_stats.match(line):
                             key, values = line.split(':')
                             key = key.lstrip()
-                            sent, rcvd = values.split()
                             value_dict = {}
-                            value_dict['sent'] = int(sent)
-                            value_dict['rcvd'] = int(rcvd)
+                            try:
+                                sent, rcvd = values.split()
+                                value_dict['sent'] = int(sent)
+                                value_dict['rcvd'] = int(rcvd)
+                            except Exception as e:
+                                print"NonFatal: line:'{}' should not have matched for sent/rcvd count".format(line)
                             message_stats[key] = value_dict
 
                         if message_stats:
