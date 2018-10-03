@@ -134,16 +134,16 @@ class BgpModule(object):
                         if regex_subnet.match(line): neighbor['subnet'] = regex_subnet.match(line).group(1)
 
                         if regex_stats.match(line):
-                            key, values = line.split(':')
-                            key = key.lstrip()
-                            value_dict = {}
                             try:
+                                key, values = line.split(':')
+                                key = key.lstrip()
+                                value_dict = {}
                                 sent, rcvd = values.split()
                                 value_dict['sent'] = int(sent)
                                 value_dict['rcvd'] = int(rcvd)
+                                message_stats[key] = value_dict
                             except Exception as e:
                                 print"NonFatal: line:'{}' should not have matched for sent/rcvd count".format(line)
-                            message_stats[key] = value_dict
 
                         if message_stats:
                             neighbor['message statistics'] = message_stats
