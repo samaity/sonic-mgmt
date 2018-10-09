@@ -1,57 +1,57 @@
 testcases:
-    acl: 
+    acl:
       filename: acltb.yml
       topologies: [t1, t1-lag, t1-64-lag]
       required_vars:
-          ptf_host: 
-          testbed_type: 
-    
+          ptf_host:
+          testbed_type:
+
     arp:
       filename: arpall.yml
-      topologies: [ptf32, ptf64]
+      topologies: [ptf32, ptf64, t1, t1-lag, t1-64-lag]
       required_vars:
-          ptf_host: 
-    
+          ptf_host:
+
     bgp_fact:
       filename: bgp_fact.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag]
- 
-    
+      topologies: [t0, t0-16, t0-56, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag]
+
+
     bgp_multipath_relax:
       filename: bgp_multipath_relax.yml
       topologies: [t1, t1-lag, t1-64-lag]
       required_vars:
           ptf_host:
           testbed_type:
-    
+
     bgp_speaker:
       filename: bgp_speaker.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116]
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116]
       required_vars:
           ptf_host:
           testbed_type:
-    
+
     continuous_reboot:
       filename: continuous_reboot.yml
       topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag]
 
     copp:
       filename: copp.yml
-      topologies: [ptf32, ptf64]
+      topologies: [ptf32, ptf64, t1, t1-lag]
       required_vars:
           ptf_host:
- 
+
     decap:
       filename: decap.yml
       topologies: [t1, t1-lag, t1-64-lag, t0, t0-64, t0-116]
       required_vars:
-          ptf_host: 
-          testbed_type: 
-          dscp_mode: 
- 
+          ptf_host:
+          testbed_type:
+          dscp_mode:
+
     dhcp_relay:
       filename: dhcp_relay.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116]
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116]
       required_vars:
           ptf_host:
 
@@ -65,31 +65,31 @@ testcases:
       required_vars:
           ptf_host:
           testbed_type:
-    
+
     fast-reboot:
       filename: fast-reboot.yml
       topologies: [t0, t0-64, t0-64-32, t0-116]
       required_vars:
           ptf_host:
           vm_hosts:
- 
+
     fib:
       filename: fib.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag]
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag]
       required_vars:
-          ptf_host: 
+          ptf_host:
           testbed_type:
- 
+
     fdb:
       filename: fdb.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116]
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116]
       required_vars:
-          ptf_host: 
+          ptf_host:
           testbed_type:
- 
+
     dir_bcast:
       filename: dir_bcast.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116]
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116]
       required_vars:
           ptf_host:
           testbed_type:
@@ -100,18 +100,18 @@ testcases:
       required_vars:
           ptf_host:
           testbed_type:
-    
+
     lldp:
       filename: lldp.yml
-      topologies: [t0, t0-64, t0-116, t0-64-32, t1, t1-lag, t1-64-lag]
-    
+      topologies: [t0, t0-16, t0-64, t0-116, t0-64-32, t1, t1-lag, t1-64-lag]
+
     link_flap:
       filename: link_flap.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
-    
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
+
     mem_check:
       filename: mem_check.yml
-      topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
 
     mtu:
       filename: mtu.yml
@@ -145,7 +145,7 @@ testcases:
     qos:
       filename: qos.yml
       topologies: [ptf32, ptf64]
-    
+
     reboot:
       filename: reboot.yml
       topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
@@ -160,6 +160,10 @@ testcases:
 
     restart_swss_service:
       filename: restart_swss.yml
+      topologies: [t0, t0-16, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
+
+    restart_syncd:
+      filename: restart_syncd.yml
       topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
 
     sensors:
@@ -169,22 +173,29 @@ testcases:
     service_acl:
       filename: service_acl.yml
       topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
-    
+
     snmp:
       filename: snmp.yml
       topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
-     
+
     syslog:
       filename: syslog.yml
       topologies: [t0, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag, ptf32, ptf64]
 
     vlan:
       filename: vlantb.yml
-      topologies: [t0, t0-116]
+      topologies: [t0, t0-16, t0-116]
       required_vars:
           ptf_host:
           testbed_type:
 
     crm:
       filename: crm.yml
-      topologies: [t1, t1-lag, t0]
+      topologies: [t1, t1-lag, t0, t0-56, t0-64, t0-116]
+
+    dip_sip:
+      filename: dip_sip.yml
+      topologies: [t0, t0-16, t0-56, t0-64, t0-64-32, t0-116, t1, t1-lag, t1-64-lag]
+      required_vars:
+          ptf_host:
+          testbed_type:

@@ -67,7 +67,7 @@
           <DhcpRelays>{{ dhcp_servers_str }}</DhcpRelays>
           <VlanID>1000</VlanID>
           <Tag>1000</Tag>
-          <Subnets>192.168.0.0/24</Subnets>
+          <Subnets>192.168.0.0/21</Subnets>
         </VlanInterface>
 {% endif %}
       </VlanInterfaces>
@@ -96,7 +96,7 @@
         <IPInterface>
           <Name i:nil="true"/>
           <AttachTo>Vlan1000</AttachTo>
-          <Prefix>192.168.0.1/24</Prefix>
+          <Prefix>192.168.0.1/21</Prefix>
         </IPInterface>
 {% endif %}
       </IPInterfaces>
@@ -119,11 +119,15 @@
         </AclInterface>
         <AclInterface>
           <AttachTo>
-{%- for index in host_if_indexes %}
-{{ port_alias[index] }}{% if not loop.last %};{% endif %}
+{%- for index in range(vms_number) %}
+{% if 'port-channel' in vm_topo_config['vm'][vms[index]]['ip_intf']|lower %}
+PortChannel{{ ((index+1) |string).zfill(4) }}{% if not loop.last %};{% endif %}
+{% endif %}
 {% endfor %}
-{% for index in ifindex_to_vms %}
-{{ port_alias[index] }}{% if not loop.last %};{% endif %}
+{%- for index in range(vms_number) %}
+{% if 'port-channel' not in vm_topo_config['vm'][vms[index]]['ip_intf']|lower %}
+{{ port_alias[vm_topo_config['vm'][vms[index]]['interface_indexes'][0]] }}{% if not loop.last %};{% endif %}
+{% endif %}
 {% endfor -%}
           </AttachTo>
           <InAcl>DataAcl</InAcl>

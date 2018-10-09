@@ -79,7 +79,7 @@
         flat: yes
       delegate_to: "{{ ptf_host }}"
 
-    - name: set authorized key took from file
+    - name: set authorized key taken from file
       authorized_key:
         user: "{{ ansible_ssh_user }}"
         state: present
@@ -103,6 +103,33 @@
         dest: /tmp/ports.json
       delegate_to: "{{ ptf_host }}"
 
+    - block:
+
+        - name: Save image version
+          shell: 'sonic_installer list | grep Current | cut -f2 -d " "'
+          register: current_sonic_image
+          become: true
+
+        - set_fact:
+            new_image_location: '/tmp/new_sonic_image.bin'
+
+        - name: Download SONiC image.
+          local_action: get_url url={{ new_sonic_image }} dest={{ new_image_location }}
+
+        - name: Upload SONiC image to device.
+          copy:
+            src: "{{ new_image_location }}"
+            dest: "{{ new_image_location }}"
+
+        - name: Install a new SONiC image if requested
+          shell: sonic_installer install -y {{ new_image_location }}
+          become: true
+          notify:
+            - restore current image
+            - reboot sonic
+
+      when: new_sonic_image is defined
+
     - include: ptf_runner.yml
       vars:
         ptf_test_name: Fast-reboot test
@@ -120,6 +147,7 @@
         - vlan_ports_file=\"/tmp/vlan_interfaces.json\"
         - ports_file=\"/tmp/ports.json\"
         - dut_mac='{{ ansible_Ethernet0['macaddress'] }}'
+        - dut_vlan_ip='192.168.0.1'
         - default_ip_range='192.168.0.0/16'
         - vlan_ip_range=\"{{ minigraph_vlan_interfaces[0]['subnet'] }}\"
         - lo_v6_prefix=\"{{ minigraph_lo_interfaces | map(attribute='addr') | ipv6 | first | ipsubnet(64) }}\"
@@ -173,3 +201,6 @@
         src: '/tmp/swss.rec'
         dest: '/tmp/'
         flat: yes
+
+    - name: make sure all handlers run
+      meta: flush_handlers

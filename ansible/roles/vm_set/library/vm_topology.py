@@ -491,6 +491,7 @@ class VMTopology(object):
         out = VMTopology.cmd('ovs-vsctl list-ports %s' % bridge)
         return set(out.split('\n'))
 
+
     @staticmethod
     def get_ovs_port_bindings(bridge, vlan_iface = None):
         # Vlan interface addition may take few secs to reflect in OVS Command,
