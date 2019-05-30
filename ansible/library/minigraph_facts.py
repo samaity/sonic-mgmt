@@ -547,6 +547,41 @@ def parse_xml(filename, hostname):
         # from port 96 - 126 are 50G
         for i in range(96, 128, 2):
             port_alias_to_name_map["Eth%d/%d" % (i/4 + 1, (i%4)/2+1)] = "Ethernet%d" % i
+    elif hwsku == "Open19-Bolt-100":
+        # from port 0 - 92 are 100G
+        for i in range(0, 96, 4):
+            port_alias_to_name_map["slot{}-{}".format(i/2+1, (i/2 + 2))] = "Ethernet{}".format(i)
+        # from port 96 - 124 are 100G
+        for i in range(96, 128, 4):
+            port_alias_to_name_map["Eth{}".format(i/4-23)] = "Ethernet{}".format(i)
+    elif hwsku == "Open19-Bolt-50-100":
+        # from port 0 - 94 are 50G
+        for i in range(0, 96, 2):
+            port_alias_to_name_map["slot{}".format(i/2 + 1)] = "Ethernet{}".format(i)
+        # from port 96 - 124 are 100G
+        for i in range(96, 128, 4):
+            port_alias_to_name_map["Eth{}".format(i/4 - 23)] = "Ethernet{}".format(i)
+    elif hwsku == "Open19-Bolt-25-100":
+        # from port 0 - 95 are 25G
+        for i in range(0, 96):
+            port_alias_to_name_map["slot{}/{}".format((i/2 + 1), (i%2 + 1))] = "Ethernet{}".format(i)
+        # from port 96 - 124 are 100G
+        for i in range(96, 128, 4):
+            port_alias_to_name_map["Eth{}".format(i/4 - 23)] = "Ethernet{}".format(i)
+    elif hwsku == "Open19-Bolt-50-50":
+        # from port 0 - 94 are 50G
+        for i in range(0, 96, 2):
+            port_alias_to_name_map["slot{}".format(i/2 + 1)] = "Ethernet{}".format(i)
+        # from port 96 - 126 are 50G
+        for i in range(96, 128, 2):
+            port_alias_to_name_map["Eth{}/{}".format(i/4 - 23, (i%4)/2 + 1)] = "Ethernet{}".format(i)
+    elif hwsku == "Open19-Bolt-25-50":
+        # from port 0 - 95 are 25G
+        for i in range(0, 96):
+            port_alias_to_namemap["slot{}/{}".format((i/2 +1), (i%2 + 1))] = "Ethernet{}".format(i)
+        # from port 96 - 126 are 50G
+        for i in range(96, 128, 2):
+            port_alias_to_name_map["Eth{}/{}".format(i/4 - 23, i%4 / 2 + 1)] = "Ethernet{}".format(i)
     else:
         for i in range(0, 128, 4):
             port_alias_to_name_map["Ethernet%d" % i] = "Ethernet%d" % i
