@@ -89,7 +89,7 @@ class SerialSession(object):
     def login(self, user, password):
         try:
             self.d.debug('## Getting the login prompt')
-            self.pair('\r', [r'login:'], 240)
+            self.pair('\r', [r'login:'], 450)
         except EMatchNotFound:
             self.d.debug('No login prompt is found')
             raise ELoginPromptNotFound
