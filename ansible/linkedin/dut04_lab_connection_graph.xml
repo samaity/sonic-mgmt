@@ -1,0 +1,62 @@
+<!--Connections for Linkedin TestBed2 from Server8->Froor02->Fleaf02->Dut04-->
+<LabConnectionGraph>
+  <PhysicalNetworkGraphDeclaration>
+    <Devices>
+      <Device Hostname="str-acs-serv-08" HwSku="TestServ" Type="Server"/>
+      <Device Hostname="falco-test-froot02" HwSku="Seastone-DX010" Type="FanoutRoot"/>
+      <Device Hostname="falco-test-fleaf02" HwSku="Seastone-DX010" Type="FanoutLeaf"/>
+      <Device Hostname="falco-test-dut04" HwSku="Seastone-DX010" Type="DevSonic"/>
+    </Devices>
+    <DeviceInterfaceLinks>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/1" StartDevice="falco-test-dut04" StartPort="Ethernet0"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/2" StartDevice="falco-test-dut04" StartPort="Ethernet4"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/3" StartDevice="falco-test-dut04" StartPort="Ethernet8"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/4" StartDevice="falco-test-dut04" StartPort="Ethernet12"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/5" StartDevice="falco-test-dut04" StartPort="Ethernet16"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/6" StartDevice="falco-test-dut04" StartPort="Ethernet20"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/7" StartDevice="falco-test-dut04" StartPort="Ethernet24"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/8" StartDevice="falco-test-dut04" StartPort="Ethernet28"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/9" StartDevice="falco-test-dut04" StartPort="Ethernet32"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/10" StartDevice="falco-test-dut04" StartPort="Ethernet36"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/11" StartDevice="falco-test-dut04" StartPort="Ethernet40"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/12" StartDevice="falco-test-dut04" StartPort="Ethernet44"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/13" StartDevice="falco-test-dut04" StartPort="Ethernet48"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/14" StartDevice="falco-test-dut04" StartPort="Ethernet52"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/15" StartDevice="falco-test-dut04" StartPort="Ethernet56"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fleaf02" EndPort="0/16" StartDevice="falco-test-dut04" StartPort="Ethernet60"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-froot02" EndPort="0/32" StartDevice="falco-test-fleaf02" StartPort="0/32"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="str-acs-serv-08" EndPort="enp9s0" StartDevice="falco-test-froot02" StartPort="0/1"/>
+    </DeviceInterfaceLinks>
+  </PhysicalNetworkGraphDeclaration>
+  <DataPlaneGraph>
+    <DevicesL3Info Hostname="falco-test-froot02">
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.25.11.52/24"/>
+    </DevicesL3Info>
+    <DevicesL2Info Hostname="falco-test-froot02">
+      <InterfaceVlan mode="Trunk" portname="0/1" vlanids="1681-1712"/>
+      <InterfaceVlan mode="Trunk" portname="0/32" vlanids="1681-1712"/>
+    </DevicesL2Info>
+    <DevicesL3Info Hostname="falco-test-fleaf02">
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.25.11.64/24"/>
+    </DevicesL3Info>
+    <DevicesL2Info Hostname="falco-test-fleaf02">
+      <InterfaceVlan mode="Access" portname="0/1" vlanids="1681"/>
+      <InterfaceVlan mode="Access" portname="0/2" vlanids="1682"/>
+      <InterfaceVlan mode="Access" portname="0/3" vlanids="1683"/>
+      <InterfaceVlan mode="Access" portname="0/4" vlanids="1684"/>
+      <InterfaceVlan mode="Access" portname="0/5" vlanids="1685"/>
+      <InterfaceVlan mode="Access" portname="0/6" vlanids="1686"/>
+      <InterfaceVlan mode="Access" portname="0/7" vlanids="1687"/>
+      <InterfaceVlan mode="Access" portname="0/8" vlanids="1688"/>
+      <InterfaceVlan mode="Access" portname="0/9" vlanids="1689"/>
+      <InterfaceVlan mode="Access" portname="0/10" vlanids="1690"/>
+      <InterfaceVlan mode="Access" portname="0/11" vlanids="1691"/>
+      <InterfaceVlan mode="Access" portname="0/12" vlanids="1692"/>
+      <InterfaceVlan mode="Access" portname="0/13" vlanids="1693"/>
+      <InterfaceVlan mode="Access" portname="0/14" vlanids="1694"/>
+      <InterfaceVlan mode="Access" portname="0/15" vlanids="1695"/>
+      <InterfaceVlan mode="Access" portname="0/16" vlanids="1696"/>
+      <InterfaceVlan mode="Trunk" portname="0/32" vlanids="1681-1712"/>
+    </DevicesL2Info>
+  </DataPlaneGraph>
+</LabConnectionGraph>

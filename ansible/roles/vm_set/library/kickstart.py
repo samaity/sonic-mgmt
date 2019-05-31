@@ -78,7 +78,7 @@ class SerialSession(object):
         return index
 
     def login(self, user, password):
-        self.pair('\r', [r'login:'], 240)
+        self.pair('\r', [r'login:'], 450)
         index_password = self.pair(user, [r'assword:', r'>'], 20)
         if index_password == 0:
             self.pair(password, [r'>'], 10)

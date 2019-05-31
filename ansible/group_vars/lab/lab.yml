@@ -35,5 +35,9 @@ snmp_rocommunity: public
 snmp_location: testlab
 
 #For Arista fanout switch deployment only
-fanout_admin_user: "fanoutadminuser"
-fanout_admin_password: "fanoutadminpassword"
+fanout_admin_user: "admin"
+fanout_admin_password: "broadcom"
+
+#For ICOS fanout switch deployment
+fanout_admin_user: "admin"
+fanout_admin_password: "broadcom"
