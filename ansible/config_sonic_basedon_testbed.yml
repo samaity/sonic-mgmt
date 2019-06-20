@@ -145,10 +145,17 @@
 
           - block:
               - name: remove fec config from config_db.json
-                lineinfile:
-                    name: /etc/sonic/config_db.json
-                    regexp: '"fec": "rs"'
-                    state: absent
+                replace:
+                    dest: /etc/sonic/config_db.json
+                    regexp:  '"fec": ".*"'
+                    replace: '"fec": "none"'
+                become: true
+
+              - name: add FRR config for latest github image
+                replace:
+                    dest: /etc/sonic/config_db.json
+                    regexp:  '"docker_routing_config_mode": ".*"'
+                    replace: '"docker_routing_config_mode": "split"'
                 become: true
 
               - name: modify port speed config in config_db.json
