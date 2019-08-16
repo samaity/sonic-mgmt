@@ -1,0 +1,12 @@
+StartDevice,StartPort,EndDevice,EndPort,BandWidth,VlanID,VlanMode
+falco-open19-flex,Ethernet96,falco-test-fout02,0/1,100000,1681,Access
+falco-open19-flex,Ethernet100,falco-test-fout02,0/2,100000,1682,Access
+falco-open19-flex,Ethernet104,falco-test-fout02,0/3,100000,1683,Access
+falco-open19-flex,Ethernet108,falco-test-fout02,0/4,100000,1684,Access
+falco-open19-flex,Ethernet112,falco-test-fout02,0/5,100000,1685,Access
+falco-open19-flex,Ethernet116,falco-test-fout02,0/6,100000,1686,Access
+falco-open19-flex,Ethernet120,falco-test-fout02,0/7,100000,1687,Access
+falco-open19-flex,Ethernet124,falco-test-fout02,0/8,100000,1688,Access
+falco-open19-flex,Ethernet92,falco-test-fout02,0/9,100000,1657,Access
+falco-test-fout02,0/32,falco-test-froot02,0/31,100000,,Trunk
+falco-test-froot02,0/1,str-acs-serv-08,enp9s0,100000,1657-1699,Trunk

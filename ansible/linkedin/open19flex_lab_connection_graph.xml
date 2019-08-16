@@ -1,0 +1,47 @@
+<LabConnectionGraph>
+  <PhysicalNetworkGraphDeclaration>
+    <Devices>
+      <Device Hostname="str-acs-serv-08" HwSku="TestServ" Type="Server"/>
+      <Device Hostname="falco-test-froot02" HwSku="Seastone-DX010" Type="FanoutRoot"/>
+      <Device Hostname="falco-test-fout02" HwSku="Seastone-DX010" Type="FanoutLeaf"/>
+      <Device Hostname="falco-open19-flex" HwSku="Open19-Bolt-100" Type="DevSonic"/>
+    </Devices>
+    <DeviceInterfaceLinks>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/1" StartDevice="falco-open19-flex" StartPort="Ethernet96"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/2" StartDevice="falco-open19-flex" StartPort="Ethernet100"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/3" StartDevice="falco-open19-flex" StartPort="Ethernet104"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/4" StartDevice="falco-open19-flex" StartPort="Ethernet108"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/5" StartDevice="falco-open19-flex" StartPort="Ethernet112"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/6" StartDevice="falco-open19-flex" StartPort="Ethernet116"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/7" StartDevice="falco-open19-flex" StartPort="Ethernet120"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/8" StartDevice="falco-open19-flex" StartPort="Ethernet124"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-fout02" EndPort="0/9" StartDevice="falco-open19-flex" StartPort="Ethernet92"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="falco-test-froot02" EndPort="0/31" StartDevice="falco-test-fout02" StartPort="0/32"/>
+      <DeviceInterfaceLink BandWidth="100000" EndDevice="str-acs-serv-08" EndPort="enp9s0" StartDevice="falco-test-froot02" StartPort="0/1"/>
+    </DeviceInterfaceLinks>
+  </PhysicalNetworkGraphDeclaration>
+  <DataPlaneGraph>
+    <DevicesL3Info Hostname="falco-test-froot02">
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.25.11.52/24"/>
+    </DevicesL3Info>
+    <DevicesL2Info Hostname="falco-test-froot02">
+      <InterfaceVlan mode="Trunk" portname="Ethernet0/1" vlanids="1657-1688"/>
+      <InterfaceVlan mode="Trunk" portname="Ethernet0/31" vlanids="1657-1688"/>
+    </DevicesL2Info>
+    <DevicesL3Info Hostname="falco-test-fout02">
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.25.11.55/24"/>
+    </DevicesL3Info>
+    <DevicesL2Info Hostname="falco-test-fout02">
+      <InterfaceVlan mode="Access" portname="0/1" vlanids="1681"/>
+      <InterfaceVlan mode="Access" portname="0/2" vlanids="1682"/>
+      <InterfaceVlan mode="Access" portname="0/3" vlanids="1683"/>
+      <InterfaceVlan mode="Access" portname="0/4" vlanids="1684"/>
+      <InterfaceVlan mode="Access" portname="0/5" vlanids="1685"/>
+      <InterfaceVlan mode="Access" portname="0/6" vlanids="1686"/>
+      <InterfaceVlan mode="Access" portname="0/7" vlanids="1687"/>
+      <InterfaceVlan mode="Access" portname="0/8" vlanids="1688"/>
+      <InterfaceVlan mode="Access" portname="0/9" vlanids="1657"/>
+      <InterfaceVlan mode="Trunk" portname="0/31" vlanids="1657-1688"/>
+    </DevicesL2Info>
+  </DataPlaneGraph>
+</LabConnectionGraph>
