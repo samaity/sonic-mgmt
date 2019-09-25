@@ -118,11 +118,6 @@
                   dest=/etc/sonic/minigraph.xml
         become: true
 
-      - name: create frr.conf file in ansible minigraph folder
-        template: src=templates/frr.j2
-                  dest=/etc/sonic/frr/frr.conf
-        become: true
-
       - name: disable automatic minigraph update if we are deploying new minigraph into SONiC
         lineinfile:
             name: /etc/sonic/updategraph.conf
@@ -163,6 +158,11 @@
                     dest: /etc/sonic/config_db.json
                     regexp:  '"speed": ".*"'
                     replace: '"speed": "{{ iface_speed }}"'
+                become: true
+
+              - name: create frr.conf file in ansible minigraph folder
+                template: src=templates/frr.j2
+                          dest=/etc/sonic/frr/frr.conf
                 become: true
 
               - name: execute cli "config reload -y" to apply modified config_db.json
