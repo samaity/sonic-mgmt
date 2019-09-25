@@ -377,6 +377,11 @@
                     replace: '"speed": "{{ iface_speed }}"'
                 become: true
 
+              - name: create frr.conf file in ansible minigraph folder
+                template: src=templates/frr.j2
+                          dest=/etc/sonic/frr/frr.conf
+                become: true
+
               - name: execute cli "config reload -y" to apply modified config_db.json
                 become: true
                 shell: config load_minigraph -y
