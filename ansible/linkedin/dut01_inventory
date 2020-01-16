@@ -1,0 +1,5 @@
+[sonic_latest]
+falco-test-dut01 ansible_host=172.21.47.56 sonic_version=v2  sonic_hwsku=Seastone-DX010
+
+[sonic:children]
+sonic_latest
