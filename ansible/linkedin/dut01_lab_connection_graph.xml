@@ -1,0 +1,93 @@
+<LabConnectionGraph>
+  <PhysicalNetworkGraphDeclaration>
+    <Devices>
+      <Device Hostname="str-acs-serv-01" HwSku="TestServ" Type="Server"/>
+      <Device Hostname="falco-test-fout00" HwSku="Arista-7250QX-64" Type="FanoutRoot"/>
+      <Device Hostname="falco-test-fout01" HwSku="Arista-7250QX-64" Type="FanoutLeaf"/>
+      <Device Hostname="falco-test-dut01" HwSku="Seastone-DX010" Type="DevSonic"/>
+    </Devices>
+    <DeviceInterfaceLinks>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet1/1" StartDevice="falco-test-dut01" StartPort="Ethernet0"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet2/1" StartDevice="falco-test-dut01" StartPort="Ethernet4"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet3/1" StartDevice="falco-test-dut01" StartPort="Ethernet8"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet4/1" StartDevice="falco-test-dut01" StartPort="Ethernet12"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet5/1" StartDevice="falco-test-dut01" StartPort="Ethernet16"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet6/1" StartDevice="falco-test-dut01" StartPort="Ethernet20"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet7/1" StartDevice="falco-test-dut01" StartPort="Ethernet24"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet8/1" StartDevice="falco-test-dut01" StartPort="Ethernet28"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet9/1" StartDevice="falco-test-dut01" StartPort="Ethernet32"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet10/1" StartDevice="falco-test-dut01" StartPort="Ethernet36"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet11/1" StartDevice="falco-test-dut01" StartPort="Ethernet40"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet12/1" StartDevice="falco-test-dut01" StartPort="Ethernet44"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet13/1" StartDevice="falco-test-dut01" StartPort="Ethernet48"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet14/1" StartDevice="falco-test-dut01" StartPort="Ethernet52"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet15/1" StartDevice="falco-test-dut01" StartPort="Ethernet56"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet16/1" StartDevice="falco-test-dut01" StartPort="Ethernet60"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet17/1" StartDevice="falco-test-dut01" StartPort="Ethernet64"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet18/1" StartDevice="falco-test-dut01" StartPort="Ethernet68"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet19/1" StartDevice="falco-test-dut01" StartPort="Ethernet72"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet20/1" StartDevice="falco-test-dut01" StartPort="Ethernet76"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet21/1" StartDevice="falco-test-dut01" StartPort="Ethernet80"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet22/1" StartDevice="falco-test-dut01" StartPort="Ethernet84"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet23/1" StartDevice="falco-test-dut01" StartPort="Ethernet88"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet24/1" StartDevice="falco-test-dut01" StartPort="Ethernet92"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet25/1" StartDevice="falco-test-dut01" StartPort="Ethernet96"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet26/1" StartDevice="falco-test-dut01" StartPort="Ethernet100"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet27/1" StartDevice="falco-test-dut01" StartPort="Ethernet104"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet28/1" StartDevice="falco-test-dut01" StartPort="Ethernet108"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet29/1" StartDevice="falco-test-dut01" StartPort="Ethernet112"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet30/1" StartDevice="falco-test-dut01" StartPort="Ethernet116"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet31/1" StartDevice="falco-test-dut01" StartPort="Ethernet120"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet32/1" StartDevice="falco-test-dut01" StartPort="Ethernet124"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="str-acs-serv-01" EndPort="eth0" StartDevice="falco-test-fout00" StartPort="Ethernet1/1"/>
+      <DeviceInterfaceLink BandWidth="40000" EndDevice="falco-test-fout01" EndPort="Ethernet64/1" StartDevice="falco-test-fout00" StartPort="Ethernet64/1"/>
+    </DeviceInterfaceLinks>
+  </PhysicalNetworkGraphDeclaration>
+  <DataPlaneGraph>
+    <DevicesL3Info Hostname="falco-test-fout00">
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.21.47.52/24"/>
+    </DevicesL3Info>
+    <DevicesL2Info Hostname="falco-test-fout00">
+      <InterfaceVlan mode="Trunk" portname="Ethernet1/1" vlanids="1681-1712"/>
+      <InterfaceVlan mode="Trunk" portname="Ethernet64/1" vlanids="1681-1712"/>
+    </DevicesL2Info>
+    <DevicesL3Info Hostname="falco-test-fout01">
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.21.47.53/24"/>
+    </DevicesL3Info>
+    <DevicesL2Info Hostname="falco-test-fout01">
+      <InterfaceVlan mode="Access" portname="Ethernet1/1" vlanids="1681"/>
+      <InterfaceVlan mode="Access" portname="Ethernet2/1" vlanids="1682"/>
+      <InterfaceVlan mode="Access" portname="Ethernet3/1" vlanids="1683"/>
+      <InterfaceVlan mode="Access" portname="Ethernet4/1" vlanids="1684"/>
+      <InterfaceVlan mode="Access" portname="Ethernet5/1" vlanids="1685"/>
+      <InterfaceVlan mode="Access" portname="Ethernet6/1" vlanids="1686"/>
+      <InterfaceVlan mode="Access" portname="Ethernet7/1" vlanids="1687"/>
+      <InterfaceVlan mode="Access" portname="Ethernet8/1" vlanids="1688"/>
+      <InterfaceVlan mode="Access" portname="Ethernet9/1" vlanids="1689"/>
+      <InterfaceVlan mode="Access" portname="Ethernet10/1" vlanids="1690"/>
+      <InterfaceVlan mode="Access" portname="Ethernet11/1" vlanids="1691"/>
+      <InterfaceVlan mode="Access" portname="Ethernet12/1" vlanids="1692"/>
+      <InterfaceVlan mode="Access" portname="Ethernet13/1" vlanids="1693"/>
+      <InterfaceVlan mode="Access" portname="Ethernet14/1" vlanids="1694"/>
+      <InterfaceVlan mode="Access" portname="Ethernet15/1" vlanids="1695"/>
+      <InterfaceVlan mode="Access" portname="Ethernet16/1" vlanids="1696"/>
+      <InterfaceVlan mode="Access" portname="Ethernet17/1" vlanids="1697"/>
+      <InterfaceVlan mode="Access" portname="Ethernet18/1" vlanids="1698"/>
+      <InterfaceVlan mode="Access" portname="Ethernet19/1" vlanids="1699"/>
+      <InterfaceVlan mode="Access" portname="Ethernet20/1" vlanids="1700"/>
+      <InterfaceVlan mode="Access" portname="Ethernet21/1" vlanids="1701"/>
+      <InterfaceVlan mode="Access" portname="Ethernet22/1" vlanids="1702"/>
+      <InterfaceVlan mode="Access" portname="Ethernet23/1" vlanids="1703"/>
+      <InterfaceVlan mode="Access" portname="Ethernet24/1" vlanids="1704"/>
+      <InterfaceVlan mode="Access" portname="Ethernet25/1" vlanids="1705"/>
+      <InterfaceVlan mode="Access" portname="Ethernet26/1" vlanids="1706"/>
+      <InterfaceVlan mode="Access" portname="Ethernet27/1" vlanids="1707"/>
+      <InterfaceVlan mode="Access" portname="Ethernet28/1" vlanids="1708"/>
+      <InterfaceVlan mode="Access" portname="Ethernet29/1" vlanids="1709"/>
+      <InterfaceVlan mode="Access" portname="Ethernet30/1" vlanids="1710"/>
+      <InterfaceVlan mode="Access" portname="Ethernet31/1" vlanids="1711"/>
+      <InterfaceVlan mode="Access" portname="Ethernet32/1" vlanids="1712"/>
+      <InterfaceVlan mode="Trunk" portname="Ethernet64/1" vlanids="1681-1712"/>
+    </DevicesL2Info>
+  </DataPlaneGraph>
+</LabConnectionGraph>

@@ -1,0 +1,5 @@
+Hostname,ManagementIp,HwSku,Type
+str-acs-serv-01,172.21.47.16/24,TestServ,Server
+falco-test-fout00,172.21.47.52/24,Arista-7250QX-64,FanoutRoot
+falco-test-fout01,172.21.47.53/24,Arista-7250QX-64,FanoutLeaf
+falco-test-dut01,172.21.47.56/24,Seastone-DX010,DevSonic

@@ -1,0 +1,56 @@
+[vm_host_1]
+STR-ACS-SERV-01 ansible_host=172.21.47.16
+
+[vm_host:children]
+vm_host_1
+
+[vms_1]
+VM0100 ansible_host=172.21.47.191
+VM0101 ansible_host=172.21.47.192
+VM0102 ansible_host=172.21.47.193
+VM0103 ansible_host=172.21.47.194
+VM0104 ansible_host=172.21.47.195
+VM0105 ansible_host=172.21.47.196
+VM0106 ansible_host=172.21.47.197
+VM0107 ansible_host=172.21.47.198
+VM0108 ansible_host=172.21.47.199
+VM0109 ansible_host=172.21.47.200
+VM0110 ansible_host=172.21.47.201
+VM0111 ansible_host=172.21.47.202
+VM0112 ansible_host=172.21.47.203
+VM0113 ansible_host=172.21.47.204
+VM0114 ansible_host=172.21.47.205
+VM0115 ansible_host=172.21.47.206
+VM0116 ansible_host=172.21.47.207
+VM0117 ansible_host=172.21.47.208
+VM0118 ansible_host=172.21.47.209
+VM0119 ansible_host=172.21.47.210
+VM0120 ansible_host=172.21.47.211
+VM0121 ansible_host=172.21.47.212
+VM0122 ansible_host=172.21.47.213
+VM0123 ansible_host=172.21.47.214
+VM0124 ansible_host=172.21.47.215
+VM0125 ansible_host=172.21.47.216
+VM0126 ansible_host=172.21.47.217
+VM0127 ansible_host=172.21.47.218
+VM0128 ansible_host=172.21.47.219
+VM0129 ansible_host=172.21.47.220
+VM0130 ansible_host=172.21.47.221
+VM0131 ansible_host=172.21.47.222
+
+[eos:children]
+vms_1
+
+## The groups below are helper to limit running playbooks to server_1 only
+[server_1:children]
+vm_host_1
+vms_1
+
+[server_1:vars]
+host_var_file=host_vars/STR-ACS-SERV-01.yml
+
+[servers:children]
+server_1
+
+[servers:vars]
+topologies=['t1', 't1-lag', 't1-64-lag', 't0', 't0-52', 'ptf32', 'ptf64', 't0-64', 't0-64-32', 't0-116']
