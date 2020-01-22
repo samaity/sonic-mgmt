@@ -1,5 +1,5 @@
 Hostname,ManagementIp,HwSku,Type
-str-acs-serv-08,172.25.11.18/24,TestServ,Server
-falco-test-froot02,172.25.11.52/24,Seastone-DX010,FanoutRoot
-falco-test-fleaf02,172.25.11.64/24,Seastone-DX010,FanoutLeaf
-falco-test-dut04,172.25.11.65/24,Seastone-DX010,DevSonic
+str-acs-serv-08,172.21.47.18/24,TestServ,Server
+falco-test-froot02,172.21.47.52/24,Seastone-DX010,FanoutRoot
+falco-test-fleaf02,172.21.47.64/24,Seastone-DX010,FanoutLeaf
+falco-test-dut04,172.21.47.65/24,Seastone-DX010,DevSonic

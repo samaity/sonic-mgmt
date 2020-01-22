@@ -30,14 +30,14 @@
   </PhysicalNetworkGraphDeclaration>
   <DataPlaneGraph>
     <DevicesL3Info Hostname="falco-test-froot02">
-      <ManagementIPInterface Name="ManagementIp" Prefix="172.25.11.52/24"/>
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.21.47.52/24"/>
     </DevicesL3Info>
     <DevicesL2Info Hostname="falco-test-froot02">
       <InterfaceVlan mode="Trunk" portname="0/1" vlanids="1681-1712"/>
       <InterfaceVlan mode="Trunk" portname="0/32" vlanids="1681-1712"/>
     </DevicesL2Info>
     <DevicesL3Info Hostname="falco-test-fleaf02">
-      <ManagementIPInterface Name="ManagementIp" Prefix="172.25.11.64/24"/>
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.21.47.64/24"/>
     </DevicesL3Info>
     <DevicesL2Info Hostname="falco-test-fleaf02">
       <InterfaceVlan mode="Access" portname="0/1" vlanids="1681"/>

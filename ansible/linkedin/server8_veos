@@ -1,26 +1,26 @@
 [vm_host_2]
-STR-ACS-SERV-02 ansible_host=172.25.11.18
+STR-ACS-SERV-02 ansible_host=172.21.47.18
 
 [vm_host:children]
 vm_host_2
 
 [vms_2]
-VM0200 ansible_host=172.25.11.223
-VM0201 ansible_host=172.25.11.224
-VM0202 ansible_host=172.25.11.225
-VM0203 ansible_host=172.25.11.226
-VM0204 ansible_host=172.25.11.227
-VM0205 ansible_host=172.25.11.228
-VM0206 ansible_host=172.25.11.229
-VM0207 ansible_host=172.25.11.230
-VM0208 ansible_host=172.25.11.231
-VM0209 ansible_host=172.25.11.232
-VM0210 ansible_host=172.25.11.233
-VM0211 ansible_host=172.25.11.234
-VM0212 ansible_host=172.25.11.235
-VM0213 ansible_host=172.25.11.236
-VM0214 ansible_host=172.25.11.237
-VM0215 ansible_host=172.25.11.238
+VM0200 ansible_host=172.21.47.223
+VM0201 ansible_host=172.21.47.224
+VM0202 ansible_host=172.21.47.225
+VM0203 ansible_host=172.21.47.226
+VM0204 ansible_host=172.21.47.227
+VM0205 ansible_host=172.21.47.228
+VM0206 ansible_host=172.21.47.229
+VM0207 ansible_host=172.21.47.230
+VM0208 ansible_host=172.21.47.231
+VM0209 ansible_host=172.21.47.232
+VM0210 ansible_host=172.21.47.233
+VM0211 ansible_host=172.21.47.234
+VM0212 ansible_host=172.21.47.235
+VM0213 ansible_host=172.21.47.236
+VM0214 ansible_host=172.21.47.237
+VM0215 ansible_host=172.21.47.238
 
 [eos:children]
 vms_2
