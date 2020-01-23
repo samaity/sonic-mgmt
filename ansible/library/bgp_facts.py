@@ -147,8 +147,8 @@ class BgpModule(object):
                             try:
                                 key, values = line.split(':')
                                 key = key.lstrip()
-                                value_dict = {}
                                 sent, rcvd = values.split()
+                                value_dict = {}
                                 value_dict['sent'] = int(sent)
                                 value_dict['rcvd'] = int(rcvd)
                                 message_stats[key] = value_dict

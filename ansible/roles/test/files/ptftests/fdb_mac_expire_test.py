@@ -1,8 +1,4 @@
 import fdb
-import logging
-
-from collections import defaultdict
-from ipaddress import ip_address, ip_network
 
 import ptf
 import ptf.packet as scapy

@@ -71,7 +71,7 @@ class Connection(ConnectionBase):
                 self._display.vvv("SSH: EXEC {0}".format(' '.join(cmd)),
                               host=self.host)
                 last_user = user
-                client = pexpect.spawn(' '.join(cmd), env={'TERM': 'dumb'})
+                client = pexpect.spawn(' '.join(cmd), env={'TERM': 'dumb'}, timeout=60)
                 i = client.expect(['[Pp]assword:', pexpect.EOF])
                 if i == 1:
                     self._display.vvv("Server closed the connection, retry in %d seconds" % self.connection_retry_interval, host=self.host)
@@ -203,6 +203,10 @@ class Connection(ConnectionBase):
                 prompts = ['bash-3\.2\$', 'bash-3\.2#']
             elif self.sku == 'eos':
                 prompts = ['\$ ']
+
+        if self.sku in ('mlnx_os',):
+            # extend with default \u@\h:\w# for docker container prompts
+            prompts.extend(['%s@.*:.*#' % 'root'])
 
         prompts.append(pexpect.EOF)
 

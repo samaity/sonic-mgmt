@@ -40,10 +40,7 @@
         src: "{{ item }}"
         dest: /root
       with_items:
-        - ../files/sonic_str_links.csv
-        - ../files/sonic_str_devices.csv
-        - ../files/sonic_lab_links.csv
-        - ../files/sonic_lab_devices.csv
+        - ../files/lab_connection_graph.xml
         - ../veos
         - scripts/ptf_proxy.py
         - ../vars/topo_{{ topo }}.yml
@@ -66,7 +63,7 @@
     - name: Copy script
       copy:
         src: "{{ fanout_listener | default('scripts/fanout_listener.py') }}"
-        dest: /root
+        dest: /root/
     - name: Run the script
       shell: nohup python fanout_listener.py {{ ptf_host }} > /tmp/fanout_listener.console.txt 2>&1 &
       when: '"python fanout_listener.py" not in out.stdout'
