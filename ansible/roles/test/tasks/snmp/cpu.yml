@@ -51,9 +51,10 @@
     # Compare results
     - name: 'Validating SNMP CPU utilization matches shell "top" result'
       assert:
-        that: "{{ ((ansible_ChStackUnitCpuUtil5sec) - (shell_cpu_usage.stdout|int)) | abs() }} <= 5"
+        that: "{{ ((ansible_ChStackUnitCpuUtil5sec) - (shell_cpu_usage.stdout|int)) | abs() }} <= 15"
   
   always:
     - name: Stop cpu load generation
       shell: killall yes
       become: yes
+      ignore_errors: yes

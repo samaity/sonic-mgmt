@@ -276,11 +276,17 @@ function connect_topo
 
 function run_tests
 {
-  echo "Running Test Suite $3"
+  topology=$1
+  inventory=$2
+  testcase=$3
+  shift
+  shift
+  shift
 
-  read_file $1
+  echo "Running Test Suite ${testcase}"
+  read_file ${topology}
 
-  ANSIBLE_KEEP_REMOTE_FILES=1 ansible-playbook -i "$2" test_sonic.yml -e testbed_name="$1" -e testcase_name="$3" -e inventory_hostname="$dut"
+  ANSIBLE_KEEP_REMOTE_FILES=1 ansible-playbook -i "${inventory}" test_sonic.yml -e testbed_name="${topology}" -e testcase_name="${testcase}" -e inventory_hostname="$dut"
 
   echo Done
 }
@@ -336,7 +342,7 @@ case "${subcmd}" in
                ;;
   test-mg)     test_minigraph $@
                ;;
-  run_tests)   run_tests $2 $3 $4
+  run_tests)   run_tests $@
                ;;
   *)           usage
                ;;
