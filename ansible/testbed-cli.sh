@@ -279,6 +279,23 @@ function connect_topo
   ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="$2" -e "dut=$duts"
 }
 
+function run_tests
+{
+  topology=$1
+  inventory=$2
+  testcase=$3
+  shift
+  shift
+  shift
+
+  echo "Running Test Suite ${testcase}"
+  read_file ${topology}
+
+  ANSIBLE_KEEP_REMOTE_FILES=1 ansible-playbook -i "${inventory}" test_sonic.yml -e testbed_name="${topology}" -e testcase_name="${testcase}" -e inventory_hostname="$dut"
+
+  echo Done
+}
+
 vmfile=veos
 tbfile=testbed.csv
 vm_type=veos
@@ -349,7 +366,7 @@ case "${subcmd}" in
                ;;
   test-mg)     test_minigraph $@
                ;;
-  run_tests)   run_tests $2 $3 $4
+  run_tests)   run_tests $@
                ;;
   *)           usage
                ;;

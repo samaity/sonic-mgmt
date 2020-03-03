@@ -384,7 +384,7 @@
 
               - name: execute cli "config reload -y" to apply modified config_db.json
                 become: true
-                shell: config load_minigraph -y
+                shell: config reload -y
 
             when: update_config is defined and update_config|bool == true
 
