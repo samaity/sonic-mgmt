@@ -1,1 +1,3 @@
 r, ".* ERR ntpd.*routing socket reports: No buffer space available.*"
+r, ".* ERR monit.*: 'bgpcfgd' process is not running.*"
+r, ".* ERR monit.*: 'staticd' process is not running.*"

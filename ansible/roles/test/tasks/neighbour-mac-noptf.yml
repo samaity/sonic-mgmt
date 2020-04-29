@@ -147,6 +147,9 @@
       vars:
         config_source: "config_db"
 
+    - name: wait 60 seconds for ports to be up
+      pause: seconds=60
+
     - name: check port status
       interface_facts: up_ports={{ minigraph_ports }}
 
