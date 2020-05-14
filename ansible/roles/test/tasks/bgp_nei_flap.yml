@@ -1,0 +1,68 @@
+# Gather bgp fact first
+- name: Gather facts from bgp container
+  bgp_facts:
+
+- name: Print bgp facts
+  debug: msg="{{ bgp_neighbors }}"
+
+- block:
+    - name: Select one ipv4 bgp peer with bgp sessions in established state.
+      set_fact:
+        bgp_ip4_peer="{{ item }}"
+      when: "'{{ bgp_neighbors[item]['state'] }}' == 'established' and '{{ bgp_neighbors[item]['ip_version'] }}' == '4'"
+      with_items: "{{ bgp_neighbors.keys() }}"
+
+    - name: Select one ipv6 bgp peer with bgp sessions in established state.
+      set_fact:
+        bgp_ip6_peer="{{ item }}"
+      when: "'{{ bgp_neighbors[item]['state'] }}' == 'established' and '{{ bgp_neighbors[item]['ip_version'] }}' == '6'"
+      with_items: "{{ bgp_neighbors.keys() }}"
+
+    - name: shutdown ipv4 BGP peer {{ bgp_ip4_peer }}
+      shell: config bgp shutdown neighbor {{ bgp_ip4_peer }}
+      become: true
+
+    - name: shutdown ipv6 BGP peer {{ bgp_ip6_peer }}
+      shell: config bgp shutdown neighbor {{ bgp_ip6_peer }}
+      become: true
+
+    - name: Gather facts from bgp container
+      bgp_facts:
+
+    - name: Print bgp facts for {{ bgp_ip4_peer }}
+      debug: msg="{{ bgp_neighbors[bgp_ip4_peer] }}"
+
+    - name: Print bgp facts for {{ bgp_ip6_peer }}
+      debug: msg="{{ bgp_neighbors[bgp_ip6_peer] }}"
+
+    - name: Check that ipv4 bgp peer is down
+      assert: { that: "'{{  bgp_neighbors[bgp_ip4_peer]['state'] }}' != 'established'"}
+
+    - name: Check that ipv6 bgp peer is down
+      assert: { that: "'{{  bgp_neighbors[bgp_ip6_peer]['state'] }}' != 'established'"}
+
+  always:
+    - block:
+        - name: startup ipv4 BGP peer {{ bgp_ip4_peer }}
+          shell: config bgp startup neighbor {{ bgp_ip4_peer }}
+          become: true
+
+        - name: startup ipv6 BGP peer {{ bgp_ip6_peer }}
+          shell: config bgp startup neighbor {{ bgp_ip6_peer }}
+          become: true
+
+        - name: Gather facts from bgp container
+          bgp_facts:
+
+        - name: Print bgp facts for {{ bgp_ip4_peer }}
+          debug: msg="{{ bgp_neighbors[bgp_ip4_peer] }}"
+
+        - name: Print bgp facts for {{ bgp_ip6_peer }}
+          debug: msg="{{ bgp_neighbors[bgp_ip6_peer] }}"
+
+        - name: Check that ipv4 bgp peer is up
+          assert: { that: "'{{  bgp_neighbors[bgp_ip4_peer]['state'] }}' == 'established'"}
+
+        - name: Check that ipv6 bgp peer is up
+          assert: { that: "'{{  bgp_neighbors[bgp_ip6_peer]['state'] }}' == 'established'"}
+      when: bgp_ip4_peer is defined and bgp_ip6_peer is defined
