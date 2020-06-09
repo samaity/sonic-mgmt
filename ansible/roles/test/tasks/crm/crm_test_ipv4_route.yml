@@ -10,6 +10,10 @@
     - name: Get NH IP
       command: ip -4 neigh show dev {{crm_intf}} nud reachable nud stale
       register: out
+
+    - fail: msg="Get Next Hop IP failed. Neighbour not found"
+      when: out.stdout == ""
+
     - set_fact: nh_ip="{{out.stdout.split()[0]}}"
 
     - name: Add IPv4 route
@@ -57,4 +61,4 @@
         crm_cli_res: "ipv4 route"
         crm_used: "{{new_crm_stats_ipv4_route_used}}"
         crm_avail: "{{new_crm_stats_ipv4_route_available}}"
-      include: roles/test/tasks/crm/crm_test_threshold.yml
+      include_tasks: roles/test/tasks/crm/crm_test_threshold.yml

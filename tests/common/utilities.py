@@ -11,7 +11,7 @@ def wait(seconds, msg=""):
     @param seconds: Number of seconds to pause
     @param msg: Optional extra message for pause reason
     """
-    logging.debug("Pause %d seconds, reason: %s" % (seconds, msg))
+    logging.info("Pause %d seconds, reason: %s" % (seconds, msg))
     time.sleep(seconds)
 
 
@@ -36,7 +36,7 @@ def wait_until(timeout, interval, condition, *args, **kwargs):
         try:
             check_result = condition(*args, **kwargs)
         except Exception as e:
-            logging.debug("Exception caught while checking %s: %s" % (condition.__name__, repr(e)))
+            logging.error("Exception caught while checking %s: %s" % (condition.__name__, repr(e)))
             check_result = False
 
         if check_result:

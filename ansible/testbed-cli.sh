@@ -16,6 +16,8 @@ function usage
   echo "Options:"
   echo "    -t <tbfile> : testbed CSV file name (default: 'testbed.csv')"
   echo "    -m <vmfile> : virtual machine file name (default: 'veos')"
+  echo "    -k <vmtype> : vm type (veos|ceos) (default: 'veos')"
+  echo "    -n <vm_num> : vm num (default: 0)"
   echo
   echo "Positional Arguments:"
   echo "    <server-name>         : Hostname of server on which to start VMs"
@@ -56,36 +58,38 @@ function usage
 
 function read_file
 {
- echo reading
+  echo reading
 
- # Filter testbed names in the first column in the testbed definition file
- line=$(cat $tbfile | grep "^$1,")
+  # Filter testbed names in the first column in the testbed definition file
+  line=$(cat $tbfile | grep "^$1,")
 
- if [ $? -ne 0 ]
- then
+  if [ $? -ne 0 ]
+  then
    echo "Couldn't find topology name '$1'"
    exit
- fi
+  fi
 
- NL='
+  NL='
 '
- case $line in
-  *"$NL"*) echo "Find more than one topology names in $tbfile"
-           exit
-           ;;
-        *) echo Found topology $1
-           ;;
- esac
+  case $line in
+    *"$NL"*) echo "Find more than one topology names in $tbfile"
+             exit
+             ;;
+          *) echo Found topology $1
+             ;;
+  esac
 
- IFS=, read -r -a line_arr <<< $line
+  IFS=, read -r -a line_arr <<< $line
 
- testbed_name=${line_arr[1]}
- topo=${line_arr[2]}
- ptf_imagename=${line_arr[3]}
- ptf_ip=${line_arr[4]}
- server=${line_arr[5]}
- vm_base=${line_arr[6]}
- dut=${line_arr[7]}
+  testbed_name=${line_arr[1]}
+  topo=${line_arr[2]}
+  ptf_imagename=${line_arr[3]}
+  ptf=${line_arr[4]}
+  ptf_ip=${line_arr[5]}
+  server=${line_arr[6]}
+  vm_base=${line_arr[7]}
+  dut=${line_arr[8]//;/,}
+  duts=${dut//[\[\] ]/}
 }
 
 function start_vms
@@ -96,7 +100,8 @@ function start_vms
   shift
   echo "Starting VMs on server '${server}'"
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_start_VMs.yml --vault-password-file="${passwd}" -l "${server}" $@
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile -e VM_num="$vm_num" testbed_start_VMs.yml \
+      --vault-password-file="${passwd}" -l "${server}" $@
 }
 
 function stop_vms
@@ -120,9 +125,12 @@ function add_topo
 
   read_file ${topology}
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_add_vm_topology.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$dut" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" $@
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_add_vm_topology.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$duts" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" -e vm_type="$vm_type" $@ 
 
-  ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="${passwd}" -e "dut=$dut" $@
+  ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="${passwd}" -e "dut=$duts" $@
+
+  # Delete the obsoleted arp entry for the PTF IP
+  ip neighbor flush $ptf_ip
 
   # Delete the obsoleted arp entry for the PTF IP
   ip neighbor flush $ptf_ip
@@ -140,7 +148,7 @@ function remove_topo
 
   read_file ${topology}
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_remove_vm_topology.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$dut" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" $@
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_remove_vm_topology.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$duts" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" -e vm_type="$vm_type" $@
 
   echo Done
 }
@@ -155,9 +163,9 @@ function renumber_topo
 
   read_file ${topology}
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_renumber_vm_topology.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$dut" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" $@
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_renumber_vm_topology.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$duts" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" $@
 
-  ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="${passwd}" -e "dut=$dut" $@
+  ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="${passwd}" -e "dut=$duts" $@
 
   echo Done
 }
@@ -168,11 +176,11 @@ function refresh_dut
   passwd=$2
   shift
   shift
-  echo "Refresh $dut in  '${topology}'"
+  echo "Refresh $duts in  '${topology}'"
 
   read_file ${topology}
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_refresh_dut.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$dut" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" $@
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_refresh_dut.yml --vault-password-file="${passwd}" -l "$server" -e topo_name="$topo_name" -e dut_name="$duts" -e VM_base="$vm_base" -e ptf_ip="$ptf_ip" -e topo="$topo" -e vm_set_name="$testbed_name" -e ptf_imagename="$ptf_imagename" $@
 
   echo Done
 }
@@ -183,7 +191,7 @@ function connect_vms
 
   read_file $1
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_connect_vms.yml --vault-password-file="$2" -l "$server" -e topo_name="$topo_name" -e dut_name="$dut" -e VM_base="$vm_base" -e topo="$topo" -e vm_set_name="$testbed_name"
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_connect_vms.yml --vault-password-file="$2" -l "$server" -e topo_name="$topo_name" -e dut_name="$duts" -e VM_base="$vm_base" -e topo="$topo" -e vm_set_name="$testbed_name"
 
   echo Done
 }
@@ -194,7 +202,7 @@ function disconnect_vms
 
   read_file $1
 
-  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_disconnect_vms.yml --vault-password-file="$2" -l "$server" -e topo_name="$topo_name" -e dut_name="$dut" -e VM_base="$vm_base" -e topo="$topo" -e vm_set_name="$testbed_name"
+  ANSIBLE_SCP_IF_SSH=y ansible-playbook -i $vmfile testbed_disconnect_vms.yml --vault-password-file="$2" -l "$server" -e topo_name="$topo_name" -e dut_name="$duts" -e VM_base="$vm_base" -e topo="$topo" -e vm_set_name="$testbed_name"
 
   echo Done
 }
@@ -213,7 +221,7 @@ function generate_minigraph
 
   read_file $topology
 
-  ansible-playbook -i "$inventory" config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$dut" -e testbed_name="$topology" -e testbed_file=$tbfile -e local_minigraph=true $@
+  ansible-playbook -i "$inventory" config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$duts" -e testbed_name="$topology" -e testbed_file=$tbfile -e vm_file=$vmfile -e local_minigraph=true $@
 
   echo Done
 }
@@ -231,7 +239,7 @@ function deploy_minigraph
 
   read_file $topology
 
-  ansible-playbook -i "$inventory" config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$dut" -e testbed_name="$topology" -e testbed_file=$tbfile -e deploy=true -e save=true -e update_config=true $@
+  ansible-playbook -i "$inventory" config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$duts" -e testbed_name="$topology" -e testbed_file=$tbfile -e vm_file=$vmfile -e deploy=true -e save=true -e update_config=true $@
 
   echo Done
 }
@@ -249,7 +257,7 @@ function test_minigraph
 
   read_file $topology
 
-  ansible-playbook -i "$inventory" --diff --connection=local --check config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$dut" -e testbed_name="$topology" -e testbed_file=$tbfile -e local_minigraph=true $@
+  ansible-playbook -i "$inventory" --diff --connection=local --check config_sonic_basedon_testbed.yml --vault-password-file="$passfile" -l "$duts" -e testbed_name="$topology" -e testbed_file=$tbfile -e vm_file=$vmfile -e local_minigraph=true $@
 
   echo Done
 }
@@ -271,7 +279,7 @@ function connect_topo
 
   read_file $1
 
-  ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="$2" -e "dut=$dut"
+  ansible-playbook fanout_connect.yml -i $vmfile --limit "$server" --vault-password-file="$2" -e "dut=$duts"
 }
 
 function run_tests
@@ -292,14 +300,22 @@ function run_tests
 }
 vmfile=veos
 tbfile=testbed.csv
+vm_type=veos
+vm_num=0
 
-while getopts "t:m:" OPTION; do
+while getopts "t:m:k:n:" OPTION; do
     case $OPTION in
     t)
         tbfile=$OPTARG
         ;;
     m)
         vmfile=$OPTARG
+        ;;
+    k)
+        vm_type=$OPTARG
+        ;;
+    n)
+        vm_num=$OPTARG
         ;;
     *)
         usage

@@ -8,8 +8,17 @@
         crm_stats_ipv6_route_available: "{{ out.stdout_lines[1] }}"
 
     - name: Get NH IP
-      shell: ip -6 neigh show dev {{crm_intf}} nud reachable nud stale | grep -v fe80
+      shell: ip -6 neigh show dev {{crm_intf}} nud reachable nud stale
       register: out
+
+    - name: Grep NH IP
+      shell: echo "{{ out.stdout }}" | grep -v fe80
+      register: out
+      ignore_errors: yes
+
+    - fail: msg="Get Next Hop IP failed. Neighbour not found"
+      when: out.stdout == ""
+
     - set_fact: nh_ip="{{out.stdout.split()[0]}}"
 
     - name: Add IPv6 route
@@ -57,5 +66,5 @@
         crm_cli_res: "ipv6 route"
         crm_used: "{{new_crm_stats_ipv6_route_used}}"
         crm_avail: "{{new_crm_stats_ipv6_route_available}}"
-      include: roles/test/tasks/crm/crm_test_threshold.yml
+      include_tasks: roles/test/tasks/crm/crm_test_threshold.yml
 

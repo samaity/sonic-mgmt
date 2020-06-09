@@ -16,11 +16,19 @@ Fixes # (issue)
 
 ### Type of change
 
-- [] Bug fix
-- [] Testbed and Framework(new/improvement)
-- [] Test case(new/improvement)
+<!--
+- Fill x for your type of change.
+- e.g.
+- [x] Bug fix
+-->
+
+- [ ] Bug fix
+- [ ] Testbed and Framework(new/improvement)
+- [ ] Test case(new/improvement)
 
 ### Approach
+#### What is the motivation for this PR?
+
 #### How did you do it?
 
 #### How did you verify/test it?

@@ -37,11 +37,11 @@
       when: item and item != 'None'
 
     - name: Update supervisor configuration
-      include: "roles/test/tasks/common_tasks/update_supervisor.yml"
+      include_tasks: "roles/test/tasks/common_tasks/update_supervisor.yml"
       vars:
         supervisor_host: "{{ ptf_host }}"
 
-    - include: ptf_runner.yml
+    - include_tasks: ptf_runner.yml
       vars:
         ptf_test_name: Advanced-reboot test
         ptf_test_dir: ptftests
@@ -51,7 +51,8 @@
         ptf_qlen: 1000
         ptf_test_params:
         - verbose=False
-        - dut_username=\"{{ ansible_ssh_user }}\"
+        - dut_username=\"{{ sonicadmin_user }}\"
+        - dut_password=\"{{ sonicadmin_password }}\"
         - dut_hostname=\"{{ ansible_host }}\"
         - reboot_limit_in_seconds={{ reboot_limit }}
         - reboot_type=\"{{ reboot_type }}\"
@@ -60,7 +61,7 @@
         - ports_file=\"/tmp/ports.json\"
         - dut_mac='{{ dut_mac }}'
         - dut_vlan_ip='192.168.0.1'
-        - default_ip_range='192.168.0.0/16'
+        - default_ip_range='192.168.100.0/18'
         - vlan_ip_range='{{ vlan_ip_range }}'
         - lo_v6_prefix='{{ lo_v6_prefix }}'
         - arista_vms=\"['{{ vm_hosts | list | join("','") }}']\"
@@ -71,6 +72,8 @@
         - allow_vlan_flooding='{{ allow_vlan_flooding }}'
         - sniff_time_incr={{ sniff_time_incr }}
         - setup_fdb_before_test=True
+        - vnet={{ vnet }}
+        - vnet_pkts='{{ vnet_pkts }}'
 
   always:
 
@@ -144,6 +147,12 @@
         src: "{{ swss_rec }}"
         dest: '/tmp/'
         flat: yes
+
+    - name: Clear ARP table
+      command: clear arp
+
+    - name: Clear FDB table
+      command: clear fdb all
 
 - name: Wait for the DUT to be ready for the next test
   pause: seconds=420

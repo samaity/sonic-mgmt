@@ -57,12 +57,12 @@ import json
 import re
 from collections import defaultdict
 import json
-import paramiko
 import Queue
 import pickle
 from operator import itemgetter
 import scapy.all as scapyall
 import itertools
+from device_connection import DeviceConnection
 
 from arista import Arista
 import sad_path as sp
@@ -125,6 +125,7 @@ class ReloadTest(BaseTest):
         self.test_params = testutils.test_params_get()
         self.check_param('verbose', False, required=False)
         self.check_param('dut_username', '', required=True)
+        self.check_param('dut_password', '', required=True)
         self.check_param('dut_hostname', '', required=True)
         self.check_param('reboot_limit_in_seconds', 30, required=False)
         self.check_param('reboot_type', 'fast-reboot', required=False)
@@ -148,6 +149,8 @@ class ReloadTest(BaseTest):
         self.check_param('nexthop_ips', [], required = False) # nexthops for the routes that will be added during warm-reboot
         self.check_param('allow_vlan_flooding', False, required = False)
         self.check_param('sniff_time_incr', 60, required = False)
+        self.check_param('vnet', False, required = False)
+        self.check_param('vnet_pkts', None, required = False)
         if not self.test_params['preboot_oper'] or self.test_params['preboot_oper'] == 'None':
             self.test_params['preboot_oper'] = None
         if not self.test_params['inboot_oper'] or self.test_params['inboot_oper'] == 'None':
@@ -164,6 +167,11 @@ class ReloadTest(BaseTest):
         else:
            self.log_file_name = '/tmp/%s.log' % self.test_params['reboot_type']
         self.log_fp = open(self.log_file_name, 'w')
+
+        self.packets_list = []
+        self.vnet = self.test_params['vnet']
+        if (self.vnet):
+            self.packets_list = json.load(open(self.test_params['vnet_pkts']))
 
         # a flag whether to populate FDB by sending traffic from simulated servers
         # usually ARP responder will make switch populate its FDB table, but Mellanox on 201803 has
@@ -209,6 +217,12 @@ class ReloadTest(BaseTest):
         self.dataplane_io_lock   = threading.Lock()
 
         self.allow_vlan_flooding = bool(self.test_params['allow_vlan_flooding'])
+
+        self.dut_connection = DeviceConnection(
+            self.test_params['dut_hostname'],
+            self.test_params['dut_username'],
+            password=self.test_params['dut_password']
+        )
 
         return
 
@@ -404,7 +418,7 @@ class ReloadTest(BaseTest):
     def init_sad_oper(self):
         if self.sad_oper:
             self.log("Preboot/Inboot Operations:")
-            self.sad_handle = sp.SadTest(self.sad_oper, self.ssh_targets, self.portchannel_ports, self.vm_dut_map, self.test_params, self.dut_ssh, self.vlan_ports)
+            self.sad_handle = sp.SadTest(self.sad_oper, self.ssh_targets, self.portchannel_ports, self.vm_dut_map, self.test_params, self.vlan_ports)
             (self.ssh_targets, self.portchannel_ports, self.neigh_vm, self.vlan_ports), (log_info, fails) = self.sad_handle.setup()
             self.populate_fail_info(fails)
             for log in log_info:
@@ -473,11 +487,13 @@ class ReloadTest(BaseTest):
         self.reboot_type = self.test_params['reboot_type']
         if self.reboot_type not in ['fast-reboot', 'warm-reboot']:
             raise ValueError('Not supported reboot_type %s' % self.reboot_type)
-        self.dut_ssh = self.test_params['dut_username'] + '@' + self.test_params['dut_hostname']
         self.dut_mac = self.test_params['dut_mac']
 
         # get VM info
-        arista_vms = self.test_params['arista_vms'][1:-1].split(",")
+        if isinstance(self.test_params['arista_vms'], list):
+            arista_vms = self.test_params['arista_vms']
+        else:
+            arista_vms = self.test_params['arista_vms'][1:-1].split(",")
         self.ssh_targets = []
         for vm in arista_vms:
             if (vm.startswith("'") or vm.startswith('"')) and (vm.endswith("'") or vm.endswith('"')):
@@ -499,7 +515,7 @@ class ReloadTest(BaseTest):
         self.from_server_dst_ports = self.portchannel_ports
 
         self.log("Test params:")
-        self.log("DUT ssh: %s" % self.dut_ssh)
+        self.log("DUT ssh: %s@%s" % (self.test_params['dut_username'], self.test_params['dut_hostname']))
         self.log("DUT reboot limit in seconds: %s" % self.limit)
         self.log("DUT mac address: %s" % self.dut_mac)
 
@@ -522,7 +538,8 @@ class ReloadTest(BaseTest):
 
             # Pre-generate list of packets to be sent in send_in_background method.
             generate_start = datetime.datetime.now()
-            self.generate_bidirectional()
+            if not self.vnet:
+                self.generate_bidirectional()
             self.log("%d packets are ready after: %s" % (len(self.packets_list), str(datetime.datetime.now() - generate_start)))
 
         self.dataplane = ptf.dataplane_instance
@@ -717,6 +734,12 @@ class ReloadTest(BaseTest):
                 from_port = src_port
             self.packets_list.append((from_port, str(packet)))
 
+    def put_nowait(self, queue, data):
+        try:
+            queue.put_nowait(data)
+        except Queue.Full:
+            pass
+
     def runTest(self):
         self.reboot_start = None
         no_routing_start = None
@@ -727,7 +750,7 @@ class ReloadTest(BaseTest):
 
         self.ssh_jobs = []
         for addr in self.ssh_targets:
-            q = Queue.Queue()
+            q = Queue.Queue(1)
             thr = threading.Thread(target=self.peer_state_check, kwargs={'ip': addr, 'queue': q})
             thr.setDaemon(True)
             self.ssh_jobs.append((thr, q))
@@ -842,8 +865,6 @@ class ReloadTest(BaseTest):
 
             def wait_for_ssh_threads():
                 while any(thr.is_alive() for thr, _ in self.ssh_jobs):
-                    for _, q in self.ssh_jobs:
-                        q.put('go')
                     time.sleep(self.TIMEOUT)
 
                 for thr, _ in self.ssh_jobs:
@@ -858,7 +879,7 @@ class ReloadTest(BaseTest):
                 no_cp_replies = self.extract_no_cpu_replies(upper_replies)
 
             if no_routing_stop - no_routing_start > self.limit:
-                self.fails['dut'].add("Downtime must be less then %s seconds. It was %s" \
+                self.fails['dut'].add("Longest downtime period must be less then %s seconds. It was %s" \
                         % (self.test_params['reboot_limit_in_seconds'], str(no_routing_stop - no_routing_start)))
             if no_routing_stop - self.reboot_start > datetime.timedelta(seconds=self.test_params['graceful_limit']):
                 self.fails['dut'].add("%s cycle must be less than graceful limit %s seconds" % (self.reboot_type, self.test_params['graceful_limit']))
@@ -866,6 +887,10 @@ class ReloadTest(BaseTest):
                 self.fails['dut'].add("Dataplane didn't route to all servers, when control-plane was down: %d vs %d" % (no_cp_replies, self.nr_vl_pkts))
 
             if self.reboot_type == 'warm-reboot':
+                if self.total_disrupt_time > self.limit.total_seconds():
+                    self.fails['dut'].add("Total downtime period must be less then %s seconds. It was %s" \
+                        % (str(self.limit), str(self.total_disrupt_time)))
+
                 # after the data plane is up, check for routing changes
                 if self.test_params['inboot_oper'] and self.sad_handle:
                     self.check_inboot_sad_status()
@@ -921,7 +946,7 @@ class ReloadTest(BaseTest):
             self.log("-"*50)
 
             if no_routing_stop:
-                self.log("Downtime was %s" % str(no_routing_stop - no_routing_start))
+                self.log("Longest downtime period was %s" % str(no_routing_stop - no_routing_start))
                 reboot_time = "0:00:00" if routing_always else str(no_routing_stop - self.reboot_start)
                 self.log("Reboot time was %s" % reboot_time)
                 self.log("Expected downtime is less then %s" % self.limit)
@@ -989,7 +1014,7 @@ class ReloadTest(BaseTest):
         time.sleep(self.reboot_delay)
 
         self.log("Rebooting remote side")
-        stdout, stderr, return_code = self.cmd(["ssh", "-oStrictHostKeyChecking=no", self.dut_ssh, "sudo " + self.reboot_type])
+        stdout, stderr, return_code = self.dut_connection.execCommand("sudo " + self.reboot_type)
         if stdout != []:
             self.log("stdout from %s: %s" % (self.reboot_type, str(stdout)))
         if stderr != []:
@@ -1019,7 +1044,7 @@ class ReloadTest(BaseTest):
     def wait_until_cpu_port_down(self):
         while True:
             for _, q in self.ssh_jobs:
-                q.put('go')
+                self.put_nowait(q, 'cpu_down')
             if self.cpu_state.get() == 'down':
                 break
             time.sleep(self.TIMEOUT)
@@ -1027,7 +1052,7 @@ class ReloadTest(BaseTest):
     def wait_until_cpu_port_up(self):
         while True:
             for _, q in self.ssh_jobs:
-                q.put('go')
+                self.put_nowait(q, 'cpu_up')
             if self.cpu_state.get() == 'up':
                 break
             time.sleep(self.TIMEOUT)
@@ -1056,7 +1081,10 @@ class ReloadTest(BaseTest):
             self.log("Sender started at %s" % str(sender_start))
             for entry in packets_list:
                 time.sleep(interval)
-                testutils.send_packet(self, *entry)
+                if self.vnet:
+                    testutils.send_packet(self, entry[0], entry[1].decode("base64"))
+                else:
+                    testutils.send_packet(self, *entry)
             self.log("Sender has been running for %s" % str(datetime.datetime.now() - sender_start))
             # Remove filter
             self.apply_filter_all_ports('')
@@ -1159,6 +1187,22 @@ class ReloadTest(BaseTest):
             self.check_tcp_payload(pkt) and
             self.no_flood(pkt)
             ]
+
+        if self.vnet:
+            decap_packets = [ scapyall.Ether(str(pkt.payload.payload.payload)[8:]) for pkt in all_packets if
+                scapyall.UDP in pkt and
+                pkt[scapyall.UDP].sport == 1234
+                ]
+            filtered_decap_packets = [ pkt for pkt in decap_packets if
+                scapyall.TCP in pkt and
+                not scapyall.ICMP in pkt and
+                pkt[scapyall.TCP].sport == 1234 and
+                pkt[scapyall.TCP].dport == 5000 and
+                self.check_tcp_payload(pkt) and
+                self.no_flood(pkt)
+                ]
+            filtered_packets = filtered_packets + filtered_decap_packets
+
         # Re-arrange packets, if delayed, by Payload ID and Timestamp:
         packets = sorted(filtered_packets, key = lambda packet: (int(str(packet[scapyall.TCP].payload)), packet.time ))
         self.lost_packets = dict()
@@ -1203,8 +1247,8 @@ class ReloadTest(BaseTest):
         self.fails['dut'].add("Sniffer failed to filter any traffic from DUT")
         self.assertTrue(received_counter, "Sniffer failed to filter any traffic from DUT")
         self.fails['dut'].clear()
+        self.disrupts_count = len(self.lost_packets) # Total disrupt counter.
         if self.lost_packets:
-            self.disrupts_count = len(self.lost_packets) # Total disrupt counter.
             # Find the longest loss with the longest time:
             max_disrupt_from_id, (self.max_lost_id, self.max_disrupt_time, self.no_routing_start, self.no_routing_stop) = \
                 max(self.lost_packets.items(), key = lambda item:item[1][0:2])
@@ -1213,6 +1257,10 @@ class ReloadTest(BaseTest):
             self.log("Disruptions happen between %s and %s after the reboot." % \
                 (str(self.disruption_start - self.reboot_start), str(self.disruption_stop - self.reboot_start)))
         else:
+            self.max_lost_id = 0
+            self.max_disrupt_time = 0
+            self.total_disrupt_packets = 0
+            self.total_disrupt_time = 0
             self.log("Gaps in forwarding not found.")
         self.log("Total incoming packets captured %d" % received_counter)
         if packets:
@@ -1226,7 +1274,7 @@ class ReloadTest(BaseTest):
         while True:
             state = self.asic_state.get()
             for _, q in self.ssh_jobs:
-                q.put('go')
+                self.put_nowait(q, 'check_stop')
             if state == 'down':
                 break
             time.sleep(self.TIMEOUT)
