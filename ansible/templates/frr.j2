@@ -8,6 +8,8 @@ log syslog informational
 !
 log facility local4
 !
+service integrated-vtysh-config
+!
 {% set vms=vm_topo_config['vm'].keys() | sort %}
 {% set vms_number = vms | length %}
 router bgp {{ vm_topo_config['dut_asn'] }}
@@ -92,6 +94,9 @@ route-map NEIGHBOR-V6-IN permit 10
 set ipv6 next-hop prefer-global
 !
 route-map NEIGHBOR-V6-OUT permit 30
+set ipv6 next-hop prefer-global
+!
+route-map set-next-hop-global-v6 permit 10
 set ipv6 next-hop prefer-global
 !
 line vty
