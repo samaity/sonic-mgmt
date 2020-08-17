@@ -109,6 +109,7 @@ class StateMachine():
 
 class ReloadTest(BaseTest):
     TIMEOUT = 0.5
+    PKT_TOUT = 1
     VLAN_BASE_MAC_PATTERN = '72060001{:04}'
     LAG_BASE_MAC_PATTERN = '5c010203{:04}'
     SOCKET_RECV_BUFFER_SIZE = 10 * 1024 * 1024
@@ -124,6 +125,7 @@ class ReloadTest(BaseTest):
         self.sad_handle = None
         self.test_params = testutils.test_params_get()
         self.check_param('verbose', False, required=False)
+        self.check_param('enable_continuous_io', False, required=False)
         self.check_param('dut_username', '', required=True)
         self.check_param('dut_password', '', required=True)
         self.check_param('dut_hostname', '', required=True)
@@ -151,6 +153,7 @@ class ReloadTest(BaseTest):
         self.check_param('sniff_time_incr', 60, required = False)
         self.check_param('vnet', False, required = False)
         self.check_param('vnet_pkts', None, required = False)
+        self.check_param('target_version', '', required = False)
         if not self.test_params['preboot_oper'] or self.test_params['preboot_oper'] == 'None':
             self.test_params['preboot_oper'] = None
         if not self.test_params['inboot_oper'] or self.test_params['inboot_oper'] == 'None':
@@ -284,6 +287,7 @@ class ReloadTest(BaseTest):
             if verbose and self.test_params['verbose'] or not verbose:
                 print "%s : %s" % (current_time, message)
             self.log_fp.write("%s : %s\n" % (current_time, message))
+            self.log_fp.flush()
 
     def timeout(self, func, seconds, message):
         async_res = self.pool.apply_async(func)
@@ -747,7 +751,6 @@ class ReloadTest(BaseTest):
         no_cp_replies = None
         upper_replies = []
         routing_always = False
-
         self.ssh_jobs = []
         for addr in self.ssh_targets:
             q = Queue.Queue(1)
@@ -774,6 +777,26 @@ class ReloadTest(BaseTest):
             self.watcher_is_running.clear()             # By default its required to wait for the Watcher started.
             # Give watch thread some time to wind up
             watcher = self.pool.apply_async(self.reachability_watcher)
+            # If enable_continuous_io is set to True (default - False), prevent the script from proceeding further
+            if self.test_params['enable_continuous_io'] is True:
+                self.log("Waiting for the continuous I/O event to complete")
+
+                def receiveSignal(signalNumber, frame):
+                    self.log("Received signal SIGUSR1:", signalNumber)
+                    self.log("Disabling continuous I/O operation..")
+                    self.test_params['enable_continuous_io'] = False
+                    return
+                # register for an event to disable continuous I/O
+                signal.signal(signal.SIGUSR1, receiveSignal)
+                # Log the PID of the running process so that remote process could communicate via process signals
+                with open("/tmp/advanced-reboot-pid.log", "w") as fp:
+                    mypid = str(os.getpid())
+                    fp.write(mypid)
+                # Wait until continuous I/O event is disabled
+                while self.test_params['enable_continuous_io'] is True:
+                    time.sleep(5)
+                self.log("Continuous I/O operation disabled")
+                return
             time.sleep(5)
 
             self.log("Check that device is alive and pinging")
@@ -997,6 +1020,21 @@ class ReloadTest(BaseTest):
             else:
                 self.fails[neigh].add("LAG flapped %s times on %s after warm boot" % (flap_cnt, neigh))
 
+    def check_sonic_version_after_reboot(self):
+        # Check sonic version after reboot
+        target_version = self.test_params['target_version']
+        if target_version:
+            stdout, stderr, return_code = self.dut_connection.execCommand("sudo sonic_installer list | grep Current | awk '{print $2}'")
+            current_version = ""
+            if stdout != []:
+                current_version = str(stdout[0]).replace('\n', '')
+            self.log("Current={} Target={}".format(current_version, target_version))
+            if current_version != target_version:
+                self.fails['dut'].add("Sonic upgrade failed. Target={} Current={}".format(\
+                    target_version, current_version))
+                return False
+        return True
+
     def extract_no_cpu_replies(self, arr):
       """
       This function tries to extract number of replies from dataplane, when control plane is non working
@@ -1020,6 +1058,9 @@ class ReloadTest(BaseTest):
         if stderr != []:
             self.log("stderr from %s: %s" % (self.reboot_type, str(stderr)))
         self.log("return code from %s: %s" % (self.reboot_type, str(return_code)))
+        # Check sonic version after reboot
+        if not self.check_sonic_version_after_reboot():
+            thread.interrupt_main()
 
         # Note: a timeout reboot in ssh session will return a 255 code
         if return_code not in [0, 255]:
@@ -1500,7 +1541,7 @@ class ReloadTest(BaseTest):
         for i in xrange(self.nr_pc_pkts):
             testutils.send_packet(self, self.from_server_src_port, self.from_vlan_packet)
 
-        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.from_vlan_exp_packet, self.from_server_dst_ports, timeout=self.TIMEOUT)
+        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.from_vlan_exp_packet, self.from_server_dst_ports, timeout=self.PKT_TOUT)
 
         self.log("Send %5d Received %5d servers->t1" % (self.nr_pc_pkts, total_rcv_pkt_cnt), True)
 
@@ -1510,7 +1551,7 @@ class ReloadTest(BaseTest):
         for entry in self.from_t1:
             testutils.send_packet(self, *entry)
 
-        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.from_t1_exp_packet, self.vlan_ports, timeout=self.TIMEOUT)
+        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.from_t1_exp_packet, self.vlan_ports, timeout=self.PKT_TOUT)
 
         self.log("Send %5d Received %5d t1->servers" % (self.nr_vl_pkts, total_rcv_pkt_cnt), True)
 
@@ -1520,7 +1561,7 @@ class ReloadTest(BaseTest):
         for i in xrange(self.ping_dut_pkts):
             testutils.send_packet(self, self.random_port(self.vlan_ports), self.ping_dut_packet)
 
-        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.ping_dut_exp_packet, self.vlan_ports, timeout=self.TIMEOUT)
+        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.ping_dut_exp_packet, self.vlan_ports, timeout=self.PKT_TOUT)
 
         self.log("Send %5d Received %5d ping DUT" % (self.ping_dut_pkts, total_rcv_pkt_cnt), True)
 
@@ -1529,6 +1570,6 @@ class ReloadTest(BaseTest):
     def arpPing(self):
         for i in xrange(self.arp_ping_pkts):
             testutils.send_packet(self, self.arp_src_port, self.arp_ping)
-        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.arp_resp, [self.arp_src_port], timeout=self.TIMEOUT)
+        total_rcv_pkt_cnt = testutils.count_matched_packets_all_ports(self, self.arp_resp, [self.arp_src_port], timeout=self.PKT_TOUT)
         self.log("Send %5d Received %5d arp ping" % (self.arp_ping_pkts, total_rcv_pkt_cnt), True)
         return total_rcv_pkt_cnt

@@ -582,6 +582,9 @@ def parse_xml(filename, hostname):
         # from port 96 - 126 are 50G
         for i in range(96, 128, 2):
             port_alias_to_name_map["Eth{}/{}".format(i/4 - 23, i%4 / 2 + 1)] = "Ethernet{}".format(i)
+    elif hwsku == "newport":
+        for i in range(0, 256, 8):
+            port_alias_to_name_map["Ethernet%d" % i] = "Ethernet%d" % i
     else:
         for i in range(0, 128, 4):
             port_alias_to_name_map["Ethernet%d" % i] = "Ethernet%d" % i

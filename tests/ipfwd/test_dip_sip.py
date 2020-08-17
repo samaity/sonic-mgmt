@@ -3,21 +3,20 @@ import ptf.testutils as testutils
 from ipaddress import ip_address
 import logging
 
+from tests.common.fixtures.ptfhost_utils import change_mac_addresses      # lgtm[py/unused-import]
+from tests.common.fixtures.ptfhost_utils import remove_ip_addresses       # lgtm[py/unused-import]
+
 TOPO_LIST = {'t0', 't1', 't1-lag'}
 PORTS_TOPO = {'t1'}
 LAG_TOPO = {'t0', 't1-lag'}
 DEFAULT_HLIM_TTL = 64
 WAIT_EXPECTED_PACKET_TIMEOUT = 5
 
+pytestmark = [
+    pytest.mark.topology('any')
+]
+
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture(scope='function', autouse=True)
-def prepare_ptf(ptfhost):
-    # remove existing IPs from ptf host
-    ptfhost.script('scripts/remove_ip.sh')
-    # set unique MACs to ptf interfaces
-    ptfhost.script('scripts/change_mac.sh')
 
 
 def lag_facts(dut, mg_facts):
