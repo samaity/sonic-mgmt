@@ -304,9 +304,23 @@
 
       - debug: msg={{ docker_status.stdout_lines }}
 
-      - name: execute cli "config load_minigraph -y" to apply new minigraph
+      - name: generate config_db.json and keep it to a temporary file
+        shell: sonic-cfggen -H -m /etc/sonic/minigraph.xml --print-data > draft.json
+        become: yes
+
+      - name: saved original config_db.json file in SONiC DUT(ignore errors when file doesnot exist)
+        shell: mv /etc/sonic/config_db.json /etc/sonic/config_db.json.orig
         become: true
-        shell: config load_minigraph -y
+        ignore_errors: true
+
+      - name: move newly created temporary file to original config_db.json file in SONiC DUT(ignore errors when file doesnot exist)
+        shell: mv draft.json /etc/sonic/config_db.json
+        become: true
+        ignore_errors: true
+
+      - name: execute cli "config reload -y" to apply new config
+        become: true
+        shell: config reload -y
 
       - name: execute cli "config bgp startup all" to bring up all bgp sessions for test
         become: true
