@@ -50,6 +50,43 @@ def verify_telemetry_dockerimage(duthost):
     matching = [s for s in docker_out_list if "docker-sonic-telemetry" in s]
     return (len(matching) > 0)
 
+def get_telemetry_daemon_states(duthost):
+    """
+    @summary: get state list of daemons from telemetry docker.
+              if some daemon is disabled for any reason, then remove it from the daemon list.
+    @return: dictionary of { service_name1 : state1, ... ... }
+    """
+    # some services are meant to have a short life span or not part of the daemons
+    exemptions = ['start.sh', 'rsyslogd', 'start']
+
+    daemons = duthost.shell('docker exec telemetry supervisorctl status')['stdout_lines']
+    daemon_list = [ line.strip().split()[0] for line in daemons if len(line.strip()) > 0 ]
+
+    # Collect state of services that are not on the exemption list.
+    daemon_states = {}
+    for line in daemons:
+        words = line.strip().split()
+        if len(words) >= 2 and words[0] not in exemptions:
+            daemon_states[words[0]] = words[1]
+
+    logging.info("Telemetry daemon state list for this platform is %s" % str(daemon_states))
+    return daemon_states
+
+def check_telemetry_daemon_status(duthost):
+    """
+    @summary: check daemon running status inside telemetry docker.
+    This function use command "supervisorctl status" inside the container and check the status from the command output.
+    If the daemon status is "RUNNING" then return True, if daemon not exist or status is not "RUNNING", return false.
+    """
+    daemons = get_telemetry_daemon_states(duthost)
+    ret     = True
+    for daemon, state in daemons.items():
+        logging.debug("Daemon %s status is %s" % (daemon, state))
+        if state != 'RUNNING':
+            ret = False
+
+    return ret
+
 # Test functions
 def test_config_db_parameters(duthost):
     """Verifies required telemetry parameters from config_db.
