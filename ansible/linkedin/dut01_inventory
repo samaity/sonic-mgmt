@@ -3,6 +3,16 @@ all:
     sonic:
       children:
         sonic_latest:
+    ptf:
+      hosts:
+        ptf_ptf1:
+          ansible_host: 172.21.47.190
+          ansible_ssh_user: root
+          ansible_ssh_pass: root
+        ptf_vms1-1:
+          ansible_host: 172.21.47.190
+          ansible_ssh_user: root
+          ansible_ssh_pass: root
 
 sonic_latest:
   hosts:
