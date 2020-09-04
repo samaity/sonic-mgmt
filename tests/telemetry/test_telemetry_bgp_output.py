@@ -1,8 +1,9 @@
 import re
 import pytest
+from ipaddress import ip_address
 
 from tests.common.helpers.assertions import pytest_assert
-from tests.common.utilities import wait_until
+from tests.common.utilities import wait_until, wait
 from tests.telemetry.test_telemetry import get_list_stdout, verify_telemetry_dockerimage, setup_telemetry_forpyclient
 from tests.telemetry.test_telemetry import check_telemetry_daemon_status, get_telemetry_daemon_states
 
@@ -15,6 +16,7 @@ logger = logging.getLogger(__name__)
 # Globals
 ADMIN_DOWN = '1' # AdminStatus(1): Down
 ADMIN_UP = '2'   # AdminStatus(2): Up
+WAIT_TIME = 5
 
 @pytest.fixture(scope="module")
 def common_setup(duthost, ptfhost):
@@ -138,3 +140,80 @@ def test_telemetry_all_bgp_keys(common_setup, duthost, ptfhost):
             logger.info(peerState_in_state_db)
             pytest_assert(peerState_in_state_db == v['state'],
                           "Target peer state {} does match with expected one : {}".format(peerState_in_state_db, v['state']))
+
+def test_telemetry_bgp_parameter_change(common_setup, duthost, nbrhosts, ptfhost, eos, testbed):
+    """ Test bgp-polling daemon works well with the continous change of bgp information with peer
+        and gnmi cli should provide the updated information from FRR as well in sync with bgp-polling daemon.
+    """
+    dut_ip = common_setup
+    config_facts  = duthost.config_facts(host=duthost.hostname, source="running")['ansible_facts']
+    bgp_neighbors = config_facts.get('BGP_NEIGHBOR', {})
+    metadata = config_facts.get('DEVICE_METADATA', {})
+
+    # Select one of the bgp neighbors
+    for neigh_addr in bgp_neighbors:
+        addr = ip_address(neigh_addr)
+        if addr.version == 4:
+            bgp_neigh_ip = neigh_addr
+            bgp_neigh_desc = bgp_neighbors[neigh_addr]['name']
+            break
+
+    try:
+        # Shutdown/Peer down the selected bgp neighbor
+        duthost.command("vtysh -c \"configure terminal\" \
+                               -c \"router bgp {}\" \
+                               -c \"neighbor {} description test_description\" \
+                               -c \"neighbor {} shutdown\"".format(
+                                   metadata['localhost']['bgp_asn'], \
+                                   bgp_neigh_ip, bgp_neigh_ip))
+        wait(WAIT_TIME, msg="Wait {} seconds to reflect on state db.".format(WAIT_TIME))
+
+        # Gather updated bgp_facts about all bgp neighbors
+        bgp_facts = duthost.bgp_facts()['ansible_facts']
+        logger.info(bgp_facts)
+
+        # Collect peer state, admin status and  peer description.
+        if neigh_addr in bgp_facts['bgp_neighbors'].keys():
+            current_state = bgp_facts['bgp_neighbors'][bgp_neigh_ip]['state']
+            current_admin_status = bgp_facts['bgp_neighbors'][bgp_neigh_ip]['admin']
+            current_decription = bgp_facts['bgp_neighbors'][bgp_neigh_ip]['description']
+
+        # Check STATE_DB|BGP_TABLE whether the BGP Peer IDLE state get reflected for the selected neighbor.
+        cmd = 'python /gnxi/gnmi_cli_py/py_gnmicli.py -g -t {0} -p 50051 -m get -x BGP_TABLE/{1} -xt STATE_DB -o "ndastreamingservertest"'.format(dut_ip, bgp_neigh_ip)
+        show_gnmi_out = ptfhost.shell(cmd)['stdout']
+        result = str(show_gnmi_out)
+        peer_state_match = re.search("BgpPeerState\":\s+\"(\w+).+", result)
+        if peer_state_match:
+            peerState_in_state_db = peer_state_match.group(1).lower()
+            logger.info(peerState_in_state_db)
+            pytest_assert(peerState_in_state_db == current_state,
+                          "Target peer state {} does match with expected one : {}".format(peerState_in_state_db, current_state))
+
+        # Check STATE_DB|BGP_TABLE whether BGP Peer DOWN state get reflected for the selected neighbor.
+        peer_state_match = re.search("BgpPeerAdminStatus\":\s+\"(\w+)+\"", result)
+        if peer_state_match:
+            peerState_in_state_db = peer_state_match.group(1).lower()
+            logger.info(peerState_in_state_db)
+            peer_admin_status = 'up' if peerState_in_state_db == ADMIN_UP else 'down'
+            pytest_assert(peer_admin_status == current_admin_status,
+                          "Target peer state {} does match with expected one : {}".format(peer_admin_status, current_admin_status))
+
+        # Check STATE_DB|BGP_TABLE whether changed BGP Peer DESCRIPTION get reflected for the selected neighbor.
+        peer_description_match = re.search("BgpPeerDescription\":\s+\"(\w+)+\"", result)
+        if peer_description_match:
+            peerDesc_in_state_db = peer_description_match.group(1).lower()
+            logger.info(peerDesc_in_state_db)
+            pytest_assert(peerDesc_in_state_db == current_decription,
+			  "Target peer description {} does match with expected one : {}".format(peerDesc_in_state_db, current_decription))
+
+    except Exception as e:
+        logger.error(e)
+        raise e
+    finally:
+        # Bring back the selected bgp neighbor peer state to UP.
+        duthost.command("vtysh -c \"configure terminal\" \
+                               -c \"router bgp {}\" \
+                               -c \"neighbor {} description {}\" \
+                               -c \"no neighbor {} shutdown\"".format(
+                                   metadata['localhost']['bgp_asn'], \
+                                   bgp_neigh_ip, bgp_neigh_desc, bgp_neigh_ip))
