@@ -1,23 +1,34 @@
-[falco-open19-flex]
-falco-open19-flex    ansible_host=172.21.47.60
+all:
+  children:
+    lab:
+      vars:
+        mgmt_subnet_mask_length: 24
+      children:
+        sonic:
+          children:
+            falco_open19_flex:
+        fanout:
+          hosts:
+            falco-test-froot2:
+              ansible_host: 172.21.47.54
+            falco-test-fout02:
+              ansible_host: 172.21.47.55
+    ptf:
+      hosts:
+        ptf_ptf1:
+          ansible_host: 172.21.47.189
+          ansible_ssh_user: root
+          ansible_ssh_pass: root
+        ptf_vms1-1:
+          ansible_host: 172.21.47.189
+          ansible_ssh_user: root
+          ansible_ssh_pass: root
 
-[falco-open19-flex:vars]
-hwsku="Open19-Bolt-100"
-iface_speed='100000'
+falco_open19_flex:
+  vars:
+    hwsku: Open19-Bolt-100
+    iface_speed: 40000
+  hosts:
+    falco-open19-flex:
+      ansible_host: 172.21.47.60
 
-[sonic:children]
-falco-open19-flex
-
-[ptf]
-ptf_vms1-1  ansible_host=172.21.47.189 ansible_ssh_user=root ansible_ssh_pass=root
-
-[lab:children]
-sonic
-fanout
-
-[lab:vars]
-mgmt_subnet_mask_length="24"
-
-[fanout]
-falco-test-froot02 ansible_host=172.21.47.52
-falco-test-fout02 ansible_host=172.21.47.55

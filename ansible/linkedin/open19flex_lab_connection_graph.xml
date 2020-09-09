@@ -22,7 +22,7 @@
   </PhysicalNetworkGraphDeclaration>
   <DataPlaneGraph>
     <DevicesL3Info Hostname="falco-test-froot02">
-      <ManagementIPInterface Name="ManagementIp" Prefix="172.21.47.52/24"/>
+      <ManagementIPInterface Name="ManagementIp" Prefix="172.21.47.54/24"/>
     </DevicesL3Info>
     <DevicesL2Info Hostname="falco-test-froot02">
       <InterfaceVlan mode="Trunk" portname="Ethernet0/1" vlanids="1657-1688"/>

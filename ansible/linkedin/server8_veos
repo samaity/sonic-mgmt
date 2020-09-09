@@ -1,39 +1,77 @@
-[vm_host_2]
-STR-ACS-SERV-02 ansible_host=172.21.47.18
+all:
+  children:
+    vm_host:
+      children:
+        vm_host_2:
+    eos:
+      children:
+        vms_2:
+    servers:
+      vars:
+        topologies:
+          - t1
+          - t1-8
+          - t1-16
+          - t1-lag
+          - t1-64-lag
+          - t1-64-lag-clet
+          - t0
+          - t0-8
+          - t0-16
+          - t0-56
+          - t0-52
+          - ptf32
+          - ptf64
+          - t0-64
+          - t0-64-32
+          - t0-116
+      children:
+        server_2:
 
-[vm_host:children]
-vm_host_2
+vm_host_2:
+  hosts:
+    STR-ACS-SERV-02:
+      ansible_host: 172.21.47.18
 
-[vms_2]
-VM0200 ansible_host=172.21.47.223
-VM0201 ansible_host=172.21.47.224
-VM0202 ansible_host=172.21.47.225
-VM0203 ansible_host=172.21.47.226
-VM0204 ansible_host=172.21.47.227
-VM0205 ansible_host=172.21.47.228
-VM0206 ansible_host=172.21.47.229
-VM0207 ansible_host=172.21.47.230
-VM0208 ansible_host=172.21.47.231
-VM0209 ansible_host=172.21.47.232
-VM0210 ansible_host=172.21.47.233
-VM0211 ansible_host=172.21.47.234
-VM0212 ansible_host=172.21.47.235
-VM0213 ansible_host=172.21.47.236
-VM0214 ansible_host=172.21.47.237
-VM0215 ansible_host=172.21.47.238
+vms_2:
+  hosts:
+    VM0200:
+      ansible_host: 172.21.47.223
+    VM0201:
+      ansible_host: 172.21.47.224
+    VM0202:
+      ansible_host: 172.21.47.225
+    VM0203:
+      ansible_host: 172.21.47.226
+    VM0204:
+      ansible_host: 172.21.47.227
+    VM0205:
+      ansible_host: 172.21.47.228
+    VM0206:
+      ansible_host: 172.21.47.229
+    VM0207:
+      ansible_host: 172.21.47.230
+    VM0208:
+      ansible_host: 172.21.47.231
+    VM0209:
+      ansible_host: 172.21.47.232
+    VM0210:
+      ansible_host: 172.21.47.233
+    VM0211:
+      ansible_host: 172.21.47.234
+    VM0212:
+      ansible_host: 172.21.47.235
+    VM0213:
+      ansible_host: 172.21.47.236
+    VM0214:
+      ansible_host: 172.21.47.237
+    VM0215:
+      ansible_host: 172.21.47.238
 
-[eos:children]
-vms_2
-
-[server_2:children]
-vm_host_2
-vms_2
-
-[server_2:vars]
-host_var_file=host_vars/STR-ACS-SERV-02.yml
-
-[servers:children]
-server_2
-
-[servers:vars]
-topologies=['t1', 't1-8', 't1-16', 't1-lag', 't1-64-lag', 't0', 't0-8', 't0-16', 't0-52', 'ptf32', 'ptf64', 't0-64', 't0-64-32', 't0-116']
+# The groups below are helper to limit running playbooks to specific server(s) only
+server_2:
+  vars:
+    host_var_file: host_vars/STR-ACS-SERV-02.yml
+  children:
+    vm_host_2:
+    vms_2:
