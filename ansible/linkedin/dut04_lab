@@ -11,8 +11,10 @@ all:
           hosts:
             falco-test-froot02:
               ansible_host: 172.21.47.54
+              os: icos
             falco-test-fleaf02:
               ansible_host: 172.21.47.64
+              os: icos
     ptf:
       hosts:
         ptf_ptf1:

@@ -35,8 +35,11 @@
 - set_fact:
     root_conn: "{{ lab.ansible_facts['device_conn'][root_dev] }}"
 
+# Dont run this task if hwsku of the FanoutRoot switch is from Seastone.
 - name: Change root fanout port vlan
   action: apswitch template=roles/fanout/templates/arista_7260_connect.j2
   connection: switch
   args:
     login: "{{ switch_login['Arista'] }}"
+  with_items: "{{ lab_devices }}"
+  when: lab_devices[item]['Type'] == 'FanoutRoot' and lab_devices[item]['HwSku'] != 'Seastone-DX010'
