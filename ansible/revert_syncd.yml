@@ -1,7 +1,7 @@
-# Swap docker-syncd to docker-syncd-rpc for oneimage deployed switch
+# Revert docker-syncd back to docker-syncd for oneimage deployed switch
 # A temporary solution during period that sonic_docker is not ready for oneimage
 # Example usage:
-#   ansible-playbook swap_syncd.yml -i str --vault-password-file ~/password.txt --limit devicename
+#   ansible-playbook revert_syncd.yml -i str --vault-password-file ~/password.txt --limit devicename
 
 - hosts: all
   gather_facts: no
@@ -43,20 +43,6 @@
       shell: docker rm syncd
       ignore_errors: yes
 
-    - name: Set sysctl RCVBUF parameter for tests
-      become: true
-      sysctl:
-        name: "net.core.rmem_max"
-        value: 609430500
-        sysctl_set: yes
-
-    - name: Set sysctl SENDBUF parameter for tests
-      become: true
-      sysctl:
-        name: "net.core.wmem_max"
-        value: 609430500
-        sysctl_set: yes
-
     - name: Gather SONiC base image version
       shell: sonic-cfggen -y /etc/sonic/sonic_version.yml -v build_version
       register: result
@@ -66,13 +52,13 @@
       set_fact:
         sonic_image_version: "{{ result.stdout }}"
 
-    # Note: no_log requires passlib python library
-    - name: Pull syncd-rpc docker from registry
-      shell: docker login -u {{docker_registry_username}} -p {{docker_registry_password}} {{docker_registry_host}}; docker pull {{docker_registry_host}}/{{docker_rpc_image_name}}:{{sonic_image_version}}
-      no_log: true
+    - name: Tag default image as syncd
+      shell: docker tag {{docker_syncd_name}}:{{sonic_image_version}} {{docker_syncd_name}}
 
-    - name: Tag pulled images as syncd
-      shell: docker tag {{docker_registry_host}}/{{docker_rpc_image_name}}:{{sonic_image_version}} {{docker_syncd_name}}
+    - name: Delete the rpc image
+      become: true
+      shell: docker rmi {{docker_registry_host}}/{{docker_rpc_image_name}}:{{sonic_image_version}}
+      ignore_errors: yes
 
     - name: Start swss service
       become: true
@@ -80,4 +66,3 @@
 
     - name: Wait for the initialization process
       pause: seconds=60
-
